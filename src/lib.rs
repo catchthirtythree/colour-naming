@@ -38,7 +38,7 @@ impl Hsla {
         let mut colour: HexColourPair = COLOURS[0];
 
         for clr in COLOURS {
-            let clr_rgb = Rgba::from_bytes(clr.0);
+            let clr_rgb = Rgba::from_bytes((clr.0 << 8) + 0xff);
             let clr_hsl = clr_rgb.to_hsla();
 
             let r = rgba.r as i32 - clr_rgb.r as i32;
@@ -242,7 +242,7 @@ impl Rgba {
         let mut colour: HexColourPair = COLOURS[0];
 
         for clr in COLOURS {
-            let clr_rgb = Rgba::from_bytes(clr.0);
+            let clr_rgb = Rgba::from_bytes((clr.0 << 8) + 0xff);
             let clr_hsl = clr_rgb.to_hsla();
 
             let r = self.r as i32 - clr_rgb.r as i32;
