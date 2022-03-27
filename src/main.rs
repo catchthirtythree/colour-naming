@@ -1,8 +1,7 @@
 mod lib;
 
+use lib::*;
 use clap::{Parser, Subcommand};
-use colour_naming::Hsla;
-use crate::lib::{Rgba};
 
 #[derive(Parser)]
 struct Cli {
@@ -13,11 +12,9 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Hex  { hex: String },
-    Rgb  { r: u8,  g: u8,  b: u8 },
-    Rgba { r: u8,  g: u8,  b: u8,  a: u8 },
-    Hsl  { h: u32, s: f32, l: f32 },
-    Hsla { h: u32, s: f32, l: f32, a: u8 },
     Name { name: String },
+    Rgb  { r: u8,  g: u8,  b: u8 },
+    Hsl  { h: u32, s: u32, l: u32 },
 }
 
 fn main() {
@@ -25,63 +22,57 @@ fn main() {
 
     match &cli.command {
         Commands::Hex { hex } => {
-            match Rgba::from_hex_str(hex) {
-                Ok(rgba) => {
-                    let hsla = rgba.to_hsla();
-                    println!("HSLA => hsla({}°, {}%, {}%, {})", hsla.h, hsla.s, hsla.l, hsla.a);
-                    println!("RGBA => rgba({}, {}, {}, {})", rgba.r, rgba.g, rgba.b, rgba.a);
-                    println!("Hex  => {}", rgba.to_hex_str());
-                    println!("Name => {}", rgba.to_name());
+            match to_hex_value_from_hex_string(hex) {
+                Ok(hex_value) => {
+                    let rgb_bytes = to_rgb_bytes_from_hex_value(hex_value);
+                    let hsl_ratios = to_hsl_ratios_from_rgb_bytes(rgb_bytes);
+                    let hsl_values = to_hsl_values_from_hsl_ratios(hsl_ratios);
+                    println!("Hex:  {}", to_hex_string_from_rgb_bytes(rgb_bytes));
+                    println!("Name: {}", to_name_from_rgb_bytes(rgb_bytes));
+                    println!("RGB:  {}", to_rgb_string_from_rgb_bytes(rgb_bytes));
+                    println!("HSL:  {}", to_hsl_string_from_hsl_values(hsl_values));
                 },
+                Err(err) => panic!("{:?}", err)
+            }
+        },
 
+        Commands::Name { name } => {
+            match to_hex_value_from_name(name) {
+                Ok(hex_value) => {
+                    let rgb_bytes = to_rgb_bytes_from_hex_value(hex_value);
+                    let hsl_ratios = to_hsl_ratios_from_rgb_bytes(rgb_bytes);
+                    let hsl_values = to_hsl_values_from_hsl_ratios(hsl_ratios);
+                    println!("Hex:  {}", to_hex_string_from_rgb_bytes(rgb_bytes));
+                    println!("Name: {}", to_name_from_rgb_bytes(rgb_bytes));
+                    println!("RGB:  {}", to_rgb_string_from_rgb_bytes(rgb_bytes));
+                    println!("HSL:  {}", to_hsl_string_from_hsl_values(hsl_values));
+                },
                 Err(err) => panic!("{:?}", err)
             }
         }
 
-        Commands::Hsl { h, s, l } => {
-            let hsla = Hsla::from_hsl(*h, *s, *l);
-            let rgba = hsla.to_rgba();
-            println!("HSLA => hsla({}°, {}%, {}%)", hsla.h, hsla.s, hsla.l);
-            println!("RGBA => rgb({}, {}, {}, {})", rgba.r, rgba.g, rgba.b, rgba.a);
-            println!("Hex  => {}", rgba.to_hex_str());
-            println!("Name => {}", hsla.to_name());
-        },
-
-        Commands::Hsla { h, s, l, a } => {
-            let hsla = Hsla::from_hsla(*h, *s, *l, *a);
-            let rgba = hsla.to_rgba();
-            println!("HSLA => hsla({}°, {}%, {}%, {})", hsla.h, hsla.s, hsla.l, hsla.a);
-            println!("RGBA => rgb({}, {}, {}, {})", rgba.r, rgba.g, rgba.b, rgba.a);
-            println!("Hex  => {}", rgba.to_hex_str());
-            println!("Name => {}", hsla.to_name());
-        },
-
         Commands::Rgb { r, g, b } => {
-            let rgba = Rgba::from_rgb(*r, *g, *b);
-            let hsla = rgba.to_hsla();
-            println!("HSLA => hsla({}°, {}%, {}%, {})", hsla.h, hsla.s, hsla.l, hsla.a);
-            println!("RGB  => rgb({}, {}, {})", rgba.r, rgba.g, rgba.b);
-            println!("Hex  => {}", rgba.to_hex_str());
-            println!("Name => {}", rgba.to_name());
+            let rgb_bytes = [*r, *g, *b];
+            let hsl_ratios = to_hsl_ratios_from_rgb_bytes(rgb_bytes);
+            let hsl_values = to_hsl_values_from_hsl_ratios(hsl_ratios);
+            println!("Hex:  {}", to_hex_string_from_rgb_bytes(rgb_bytes));
+            println!("Name: {}", to_name_from_rgb_bytes(rgb_bytes));
+            println!("RGB:  {}", to_rgb_string_from_rgb_bytes(rgb_bytes));
+            println!("HSL:  {}", to_hsl_string_from_hsl_values(hsl_values));
         },
 
-        Commands::Rgba { r, g, b, a } => {
-            let rgba = Rgba::from_rgba(*r, *g, *b, *a);
-            let hsla = rgba.to_hsla();
-            println!("HSLA => hsla({}°, {}%, {}%, {})", hsla.h, hsla.s, hsla.l, hsla.a);
-            println!("RGBA => rgba({}, {}, {}, {})", rgba.r, rgba.g, rgba.b, rgba.a);
-            println!("Hex  => {}", rgba.to_hex_str());
-            println!("Name => {}", rgba.to_name());
+        Commands::Hsl { h, s, l } => {
+            // @TODO(michael): There's some loss when you go from hsl.
+            // For example: Brilliant Rose, F653A6. The b is 2 units higher than if you
+            // search for hex/name/rgb. I assume it's because of how we calculate the hue
+            // down to its ratio.
+            let hsl_values = [*h, *s, *l];
+            let hsl_ratios = to_hsl_ratios_from_hsl_values(hsl_values);
+            let rgb_bytes = to_rgb_bytes_from_hsl_ratios(hsl_ratios);
+            println!("Hex:  {}", to_hex_string_from_rgb_bytes(rgb_bytes));
+            println!("Name: {}", to_name_from_rgb_bytes(rgb_bytes));
+            println!("RGB:  {}", to_rgb_string_from_rgb_bytes(rgb_bytes));
+            println!("HSL:  {}", to_hsl_string_from_hsl_values(hsl_values));
         },
-
-        Commands::Name { name } => {
-            // @TODO(michael): Brilliant Rose, F653A6, does not work. You get Mountain Meadow...
-            let rgba = Rgba::from_name(name.to_string()).unwrap();
-            let hsla = rgba.to_hsla();
-            println!("HSLA => hsla({}°, {}%, {}%, {})", hsla.h, hsla.s, hsla.l, hsla.a);
-            println!("RGBA => rgba({}, {}, {}, {})", rgba.r, rgba.g, rgba.b, rgba.a);
-            println!("Hex  => {}", rgba.to_hex_str());
-            println!("Name => {}", rgba.to_name());
-        }
     }
 }

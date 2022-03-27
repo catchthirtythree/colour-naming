@@ -1,8 +1,193 @@
-use regex::Regex;
+pub fn to_rgb_string_from_rgb_bytes(bytes: [u8; 3]) -> String {
+    let [r, g, b] = bytes;
+    format!("rgb({}, {}, {})", r, g, b)
+}
 
-const MAX_ALPHA: u8 = 255;
+pub fn to_hsl_values_from_hsl_ratios(ratios: [f32; 3]) -> [u32; 3] {
+    let [h, s, l] = ratios;
+    let h = if h >= 0.0 {
+        h
+    } else {
+        h + 1.0
+    };
+    let h = f32::round(h * 360.0) as u32;
+    let s = f32::round(s * 100.0) as u32;
+    let l = f32::round(l * 100.0) as u32;
+    [h, s, l]
+}
 
-#[derive(Debug)]
+pub fn to_hsl_ratios_from_hsl_values(values: [u32; 3]) -> [f32; 3] {
+    let [h, s, l] = values;
+    let is_above_180 = h >= 180;
+    let h = h as f32 / 360.0;
+    let s = s as f32 / 100.0;
+    let l = l as f32 / 100.0;
+    let h = if is_above_180 {
+        h
+    } else {
+        h - 1.0
+    };
+    [h, s, l]
+}
+
+pub fn to_hsl_string_from_hsl_values(values: [u32; 3]) -> String {
+    let [h, s, l] = values;
+    format!("hsl({}°, {}%, {}%)", h, s, l)
+}
+
+pub fn to_rgb_bytes_from_hsl_ratios(ratios: [f32; 3]) -> [u8; 3] {
+    let [h, s, l] = ratios;
+
+    let m2 = if l <= 0.5 {
+        l * (s + 1.0)
+    } else {
+        l + s - l * s
+    };
+    let m1 = l * 2.0 - m2;
+
+    let r = convert_hue_to_rgb_byte(m1, m2, h + 0.33333);
+    let g = convert_hue_to_rgb_byte(m1, m2, h);
+    let b = convert_hue_to_rgb_byte(m1, m2, h - 0.33333);
+
+    [r, g, b]
+}
+
+pub fn convert_hue_to_rgb_byte(m1: f32, m2: f32, h: f32) -> u8 {
+    let h = if h < 0.0 {
+        h + 1.0
+    } else if h > 1.0 {
+        h - 1.0
+    } else {
+        h
+    };
+
+    let byte = if h * 6.0 < 1.0 {
+        m1 + (m2 - m1) * h * 6.0
+    } else if h * 2.0 < 1.0 {
+        m2
+    } else if h * 3.0 < 2.0 {
+        m1 + (m2 - m1) * (0.66666 - h) * 6.0
+    } else {
+        m1
+    };
+
+    f32::round(byte * 255.0) as u8
+}
+
+pub fn to_hsl_ratios_from_rgb_bytes(bytes: [u8; 3]) -> [f32; 3] {
+    let [r, g, b] = bytes;
+
+    let r = r as f32 / 255.0;
+    let g = g as f32 / 255.0;
+    let b = b as f32 / 255.0;
+
+    let max = f32::max(r, f32::max(g, b));
+    let min = f32::min(r, f32::min(g, b));
+    let delta = max - min;
+
+    let mut h = 0.0;
+    let mut s = 0.0;
+    let l = (max + min) / 2.0;
+
+    if l > 0.0 && l < 1.0 {
+        s = delta / if l < 0.5 {
+            2.0 * l
+        } else {
+            2.0 - 2.0 * l
+        };
+    }
+
+    if delta > 0.0 {
+        if max == r && max != g {
+            h += (g - b) / delta;
+        }
+        if max == g && max != b {
+            h += 2.0 + (b - r) / delta;
+        }
+        if max == b && max != r {
+            h += 4.0 + (r - g) / delta;
+        }
+        h /= 6.0;
+    }
+
+    [h, s, l]
+}
+
+pub fn to_rgb_bytes(num: u32) -> [u8; 3] {
+    let b1 = num >> 16;
+    let b2 = num >> 8;
+    let b3 = num;
+    return [b1 as u8, b2 as u8, b3 as u8];
+}
+
+pub fn to_hex_value_from_rgb_bytes(bytes: [u8; 3]) -> u32 {
+    let mut sum: u32 = 0;
+    for (i, byte) in bytes.iter().enumerate() {
+        sum += (*byte as u32) << ((bytes.len() - (i + 1)) * 8);
+    }
+    return sum;
+}
+
+pub fn to_name_from_rgb_bytes(bytes: [u8; 3]) -> String {
+    let [r, g, b] = bytes;
+    let [h, s, l] = to_hsl_ratios_from_rgb_bytes(bytes);
+
+    // Not entirely sure why this conversion is done, but we have to do it
+    // if we want to get the same name as name-that-color.
+    let h = f32::floor(h * 255.0);
+    let s = f32::floor(s * 255.0);
+    let l = f32::floor(l * 255.0);
+
+    let mut df: i32 = -1;
+    let mut colour: HexColourPair = COLOUR_PAIRS[0];
+
+    for pair in COLOUR_PAIRS {
+        let [pr, pg, pb] = to_rgb_bytes(pair.0);
+        let [ph, ps, pl] = to_hsl_ratios_from_rgb_bytes(to_rgb_bytes(pair.0));
+
+        // Not entirely sure why this conversion is done, but we have to do it
+        // if we want to get the same name as name-that-color.
+        let ph = f32::floor(ph * 255.0);
+        let ps = f32::floor(ps * 255.0);
+        let pl = f32::floor(pl * 255.0);
+
+        let dr = i32::pow(r as i32 - pr as i32, 2);
+        let dg = i32::pow(g as i32 - pg as i32, 2);
+        let db = i32::pow(b as i32 - pb as i32, 2);
+
+        let dh = i32::pow(h as i32 - ph as i32, 2);
+        let ds = i32::pow(s as i32 - ps as i32, 2);
+        let dl = i32::pow(l as i32 - pl as i32, 2);
+
+        let next = (dr + dg + db) + (dh + ds + dl).wrapping_mul(2);
+
+        if df < 0 || df > next {
+            df = next as i32;
+            colour = pair;
+        }
+    }
+
+    colour.1.to_string()
+}
+
+pub fn to_hex_value_from_name(s: &str) -> Result<u32, ParseError> {
+    let s = s.to_ascii_lowercase();
+    for pair in COLOUR_PAIRS {
+        let pair_name = pair.1.to_ascii_lowercase();
+        if s == pair_name {
+            return Ok(pair.0);
+        }
+    }
+
+    return Err(ParseError::InvalidName);
+}
+
+pub fn to_hex_string_from_rgb_bytes(bytes: [u8; 3]) -> String {
+    let [r, g, b] = bytes;
+    format!("#{:02X}{:02X}{:02X}", r, g, b)
+}
+
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     InvalidRegex,
     InvalidNumber,
@@ -10,267 +195,157 @@ pub enum ParseError {
     InvalidName,
 }
 
-#[derive(Debug)]
-pub struct Hsla {
-    pub h: u32, // 0 - 360
-    pub s: f32, // 0 - 1
-    pub l: f32, // 0 - 1
-    pub a: u8,  // 0 - 255
-}
+pub fn to_hex_value_from_hex_string(s: &str) -> Result<u32, ParseError> {
+    let s = s.to_ascii_lowercase();
+    let re = match regex::Regex::new("^((#)?(([a-z0-9]{8})|([a-z0-9]{6})|([a-z0-9]{3})))$") {
+        Ok(re) => re,
+        Err(_) => return Err(ParseError::InvalidRegex)
+    };
+    let captures = match re.captures(&s) {
+        Some(caps) => caps,
+        None => return Err(ParseError::InvalidCapture)
+    };
 
-impl Hsla {
-    pub fn new(h: u32, s: f32, l: f32, a: u8) -> Self {
-        Hsla { h, s, l, a }
-    }
-
-    pub fn from_hsl(h: u32, s: f32, l: f32) -> Self {
-        Hsla::from_hsla(h, s, l, MAX_ALPHA)
-    }
-
-    pub fn from_hsla(h: u32, s: f32, l: f32, a: u8) -> Self {
-        Self::new(h, s, l, a)
-    }
-
-    pub fn to_name(&self) -> String {
-        let rgba = self.to_rgba();
-
-        let mut df: i32 = -1;
-        let mut colour: HexColourPair = COLOURS[0];
-
-        for clr in COLOURS {
-            let clr_rgb = Rgba::from_bytes((clr.0 << 8) + 0xff);
-            let clr_hsl = clr_rgb.to_hsla();
-
-            let r = rgba.r as i32 - clr_rgb.r as i32;
-            let g = rgba.g as i32 - clr_rgb.g as i32;
-            let b = rgba.b as i32 - clr_rgb.b as i32;
-
-            let h = self.h as i32 - clr_hsl.h as i32;
-            let s = self.s as i32 - clr_hsl.s as i32;
-            let l = self.l as i32 - clr_hsl.l as i32;
-
-            let rgb_pow = i32::pow(r, 2) + i32::pow(g, 2) + i32::pow(b, 2);
-            let hsl_pow = i32::pow(h, 2) + i32::pow(s, 2) + i32::pow(l, 2);
-
-            let next = rgb_pow + hsl_pow * 2;
-
-            if df < 0 || df > next {
-                df = next as i32;
-                colour = clr;
+    match (captures.get(4), captures.get(5), captures.get(6)) {
+        (Some(hex), _, _) => {
+            let hex = hex.as_str();
+            match u32::from_str_radix(hex, 16) {
+                Ok(hex) => Ok(hex >> 8),
+                Err(_) => return Err(ParseError::InvalidNumber),
             }
-        }
+        },
 
-        colour.1.to_string()
-    }
+        (_, Some(hex), _) => {
+            let hex = hex.as_str();
+            match u32::from_str_radix(hex, 16) {
+                Ok(hex) => Ok(hex),
+                Err(_) => return Err(ParseError::InvalidNumber)
+            }
+        },
 
-    pub fn to_rgba(&self) -> Rgba {
-        let s = self.s / 100.0;
-        let l = self.l / 100.0;
+        (_, _, Some(hex)) => {
+            let hex = hex.as_str();
+            let hex = hex.chars().map(|ch| format!("{}{}", ch, ch)).collect::<String>();
+            match u32::from_str_radix(&hex, 16) {
+                Ok(hex) => Ok(hex),
+                Err(_) => return Err(ParseError::InvalidNumber)
+            }
+        },
 
-        let c = (1.0 - f32::abs((2.0 * l) - 1.0)) * s;
-        let hh = self.h as f32 / 60.0;
-        let x = c * (1.0 - f32::abs((hh % 2.0) - 1.0));
-
-        let mut r = 0.0;
-        let mut g = 0.0;
-        let mut b = 0.0;
-
-        if hh >= 0.0 && hh < 1.0 {
-            r = c;
-            g = x;
-        } else if hh >= 1.0 && hh < 2.0 {
-            r = x;
-            g = c;
-        } else if hh >= 2.0 && hh < 3.0 {
-            g = c;
-            b = x;
-        } else if hh >= 3.0 && hh < 4.0 {
-            g = x;
-            b = c;
-        } else if hh >= 4.0 && hh < 5.0 {
-            r = x;
-            b = c;
-        } else {
-            r = c;
-            b = x;
-        }
-
-        let m = l - (c / 2.0);
-
-        let r = f32::round((r + m) * 255.0) as u8;
-        let g = f32::round((g + m) * 255.0) as u8;
-        let b = f32::round((b + m) * 255.0) as u8;
-
-        Rgba::from_rgba(r, g, b, self.a)
+        _ => return Err(ParseError::InvalidCapture)
     }
 }
 
-#[derive(Debug)]
-pub struct Rgba {
-    pub r: u8, // 0 - 255
-    pub g: u8, // 0 - 255
-    pub b: u8, // 0 - 255
-    pub a: u8, // 0 - 255
+pub fn to_rgb_bytes_from_hex_value(value: u32) -> [u8; 3] {
+    let r = (value >> 16 & 0xff) as u8;
+    let g = (value >>  8 & 0xff) as u8;
+    let b = (value & 0xff) as u8;
+    [r, g, b]
 }
 
-impl Rgba {
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Rgba { r, g, b, a }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_bytes() {
+        let number = 0xf4e9d3;
+        let to_bytes = to_rgb_bytes(number);
+        assert_eq!(to_bytes, [0xf4, 0xe9, 0xd3]);
     }
 
-    pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        Rgba::from_rgba(r, g, b, MAX_ALPHA)
+    #[test]
+    fn test_from_bytes() {
+        let number = 0xf4e9d3;
+        let to_bytes = to_rgb_bytes(number);
+        let from_bytes = from_rgb_bytes(to_bytes);
+        assert_eq!(from_bytes, number);
     }
 
-    pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Self::new(r, g, b, a)
+    #[test]
+    fn test_from_str_from_hex() {
+        let number = 0xf4e9d3;
+        let to_bytes = to_rgb_bytes(number);
+        let from_bytes = from_rgb_bytes(to_bytes);
+        let s = "f4e9d3";
+        let from_str = to_rgb_bytes_from_hex_string(s).ok();
+        assert_eq!(from_str, Some(from_bytes));
     }
 
-    pub fn from_bytes(bytes: u32) -> Self {
-        let r = (bytes >> 24 & 0xff) as u8;
-        let g = (bytes >> 16 & 0xff) as u8;
-        let b = (bytes >>  8 & 0xff) as u8;
-        let a = (bytes       & 0xff) as u8;
-        Self::from_rgba(r, g, b, a)
+    #[test]
+    fn test_from_str_from_shortened_hex() {
+        let number = 0xff33ff;
+        let to_bytes = to_rgb_bytes(number);
+        let from_bytes = from_rgb_bytes(to_bytes);
+        let s = "f3f";
+        let from_str = to_rgb_bytes_from_hex_string(s).ok();
+        assert_eq!(from_str, Some(from_bytes));
     }
 
-    pub fn from_hex_str(s: &str) -> Result<Self, ParseError> {
-        // Set all characters to lowercase
-        let s = s.to_ascii_lowercase();
-
-        // Create a regex string that looks for an option # at the start,
-        // looks for alphanumeric characters with a length of 6 or 8,
-        // or looks for alphanumeric characters with a length of 3
-        let re = match Regex::new("^([#])?([a-z0-9]{6,8})|([a-z0-9]{3})") {
-            Ok(re) => re,
-            Err(_) => return Err(ParseError::InvalidRegex)
-        };
-
-        // Find matches within the string
-        let captures = match re.captures(&s) {
-            Some(caps) => caps,
-            None => return Err(ParseError::InvalidCapture)
-        };
-
-        // Match the result of the first and second group of the regex
-        match (captures.get(2), captures.get(3)) {
-            (Some(hex), _) => {
-                let hex = hex.as_str();
-                if hex.len() == 6 {
-                    match u32::from_str_radix(hex, 16) {
-                        Ok(hex) => Ok(Rgba::from_bytes((hex << 8) + 0xff)),
-                        Err(_) => return Err(ParseError::InvalidNumber)
-                    }
-                } else {
-                    match u32::from_str_radix(hex, 16) {
-                        Ok(hex) => Ok(Rgba::from_bytes(hex)),
-                        Err(_) => return Err(ParseError::InvalidNumber),
-                    }
-                }
-            },
-
-            (_, Some(hex)) => {
-                let hex = hex.as_str();
-                let hex = hex.chars().map(|ch| format!("{}{}", ch, ch)).collect::<String>();
-
-                match u32::from_str_radix(&hex, 16) {
-                    Ok(hex) => Ok(Rgba::from_bytes((hex << 8) + 0xff)),
-                    Err(_) => return Err(ParseError::InvalidNumber)
-                }
-            }
-
-            _ => return Err(ParseError::InvalidCapture)
-        }
+    #[test]
+    fn test_from_str_from_invalid_shortened_hex() {
+        let s = "ff3f";
+        let from_str = to_rgb_bytes_from_hex_string(s).err();
+        assert_eq!(from_str, Some(ParseError::InvalidCapture));
     }
 
-    pub fn from_name(name: String) -> Result<Rgba, ParseError> {
-        for clr in COLOURS {
-            if name.to_ascii_lowercase() == clr.1.to_ascii_lowercase() {
-                println!("{:X}", clr.0);
-                return Ok(Rgba::from_bytes((clr.0 << 8) + 0xff));
-            }
-        }
-
-        Err(ParseError::InvalidName)
+    #[test]
+    fn test_from_str_multiple_cases() {
+        assert_eq!(to_rgb_bytes_from_hex_string("").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("f").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("f1").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f1").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("f13").ok(), Some(16716083));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f13").ok(), Some(16716083));
+        assert_eq!(to_rgb_bytes_from_hex_string("f135").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f135").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("f1356").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f1356").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("f13bca").ok(), Some(15809482));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f13bca").ok(), Some(15809482));
+        assert_eq!(to_rgb_bytes_from_hex_string("f13bcaf").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f13bcaf").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("f13bcaff").ok(), Some(15809482));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f13bcaff").ok(), Some(15809482));
+        assert_eq!(to_rgb_bytes_from_hex_string("f13bcafff").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(to_rgb_bytes_from_hex_string("#f13bcafff").err(), Some(ParseError::InvalidCapture));
     }
 
-    pub fn to_hex_str(&self) -> String {
-        match self.a {
-            MAX_ALPHA => format!("#{:02X}{:02X}{:02X}", self.r, self.g, self.b),
-            _ => format!("#{:02X}{:02X}{:02X}{:02X}", self.r, self.g, self.b, self.a),
-        }
+    #[test]
+    fn test_from_str_from_hex_with_hash() {
+        let number = 0xf4e9d3;
+        let to_bytes = to_rgb_bytes(number);
+        let from_bytes = from_rgb_bytes(to_bytes);
+        let s = "#f4e9d3";
+        let from_str = to_rgb_bytes_from_hex_string(s).ok();
+        assert_eq!(from_str, Some(from_bytes));
     }
 
-    pub fn to_hsla(&self) -> Hsla {
-        let r = self.r as f32 / 255.0;
-        let g = self.g as f32 / 255.0;
-        let b = self.b as f32 / 255.0;
-
-        let max = f32::max(r, f32::max(g, b));
-        let min = f32::min(r, f32::min(g, b));
-        let delta = max - min;
-        let l = (max + min) / 2.0;
-        let s = if delta == 0.0 {
-            0.0
-        } else {
-            delta / (1.0 - f32::abs((2.0 * l) - 1.0))
-        };
-        let h = if delta == 0.0 {
-            0.0
-        } else if max == r {
-            ((g - b) / delta) % 6.0
-        } else if max == g {
-            ((b - r) / delta) + 2.0
-        } else {
-            ((r - g) / delta) + 4.0
-        } * 60.0;
-        let h = if h < 0.0 {
-            h + 360.0
-        } else {
-            h
-        } as u32;
-        let s = s * 100.0;
-        let l = l * 100.0;
-
-        Hsla::from_hsl(h, s, l)
+    #[test]
+    fn test_from_str_from_hex_with_alpha() {
+        let number = 0xf4e9d3;
+        let to_bytes = to_rgb_bytes(number);
+        let from_bytes = from_rgb_bytes(to_bytes);
+        let s = "f4e9d333";
+        let from_str = to_rgb_bytes_from_hex_string(s).ok();
+        assert_eq!(from_str, Some(from_bytes));
     }
 
-    pub fn to_name(&self) -> String {
-        let hsl = self.to_hsla();
-
-        let mut df: i32 = -1;
-        let mut colour: HexColourPair = COLOURS[0];
-
-        for clr in COLOURS {
-            let clr_rgb = Rgba::from_bytes((clr.0 << 8) + 0xff);
-            let clr_hsl = clr_rgb.to_hsla();
-
-            let r = self.r as i32 - clr_rgb.r as i32;
-            let g = self.g as i32 - clr_rgb.g as i32;
-            let b = self.b as i32 - clr_rgb.b as i32;
-
-            let h = hsl.h as i32 - clr_hsl.h as i32;
-            let s = hsl.s as i32 - clr_hsl.s as i32;
-            let l = hsl.l as i32 - clr_hsl.l as i32;
-
-            let rgb_pow = i32::pow(r, 2) + i32::pow(g, 2) + i32::pow(b, 2);
-            let hsl_pow = i32::pow(h, 2) + i32::pow(s, 2) + i32::pow(l, 2);
-
-            let next = rgb_pow + hsl_pow * 2;
-
-            if df < 0 || df > next {
-                df = next as i32;
-                colour = clr;
-            }
-        }
-
-        colour.1.to_string()
+    #[test]
+    fn test_from_str_from_hex_with_hash_and_alpha() {
+        let number = 0xf4e9d3;
+        let to_bytes = to_rgb_bytes(number);
+        let from_bytes = from_rgb_bytes(to_bytes);
+        let s = "#f4e9d333";
+        let from_str = to_rgb_bytes_from_hex_string(s).ok();
+        assert_eq!(from_str, Some(from_bytes));
     }
 }
 
 pub type HexColourPair = (u32, &'static str);
-
-pub const COLOURS: [HexColourPair; 1566] = [
+pub const COLOUR_PAIRS: [HexColourPair; 1566] = [
     (0x000000, "Black"),
     (0x000080, "Navy Blue"),
     (0x0000C8, "Dark Blue"),
