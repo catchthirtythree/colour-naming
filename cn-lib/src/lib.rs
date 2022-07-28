@@ -1,191 +1,8 @@
-pub fn to_rgb_string_from_rgb_bytes(bytes: [u8; 3]) -> String {
-    let [r, g, b] = bytes;
-    format!("rgb({}, {}, {})", r, g, b)
-}
+pub type Rgb = [u8; 3];
+pub type HslRatios = [f32; 3];
+pub type HslValues = [u32; 3];
 
-pub fn to_hsl_values_from_hsl_ratios(ratios: [f32; 3]) -> [u32; 3] {
-    let [h, s, l] = ratios;
-    let h = if h >= 0.0 {
-        h
-    } else {
-        h + 1.0
-    };
-    let h = f32::round(h * 360.0) as u32;
-    let s = f32::round(s * 100.0) as u32;
-    let l = f32::round(l * 100.0) as u32;
-    [h, s, l]
-}
-
-pub fn to_hsl_ratios_from_hsl_values(values: [u32; 3]) -> [f32; 3] {
-    let [h, s, l] = values;
-    let is_above_180 = h >= 180;
-    let h = h as f32 / 360.0;
-    let s = s as f32 / 100.0;
-    let l = l as f32 / 100.0;
-    let h = if is_above_180 {
-        h
-    } else {
-        h - 1.0
-    };
-    [h, s, l]
-}
-
-pub fn to_hsl_string_from_hsl_values(values: [u32; 3]) -> String {
-    let [h, s, l] = values;
-    format!("hsl({}°, {}%, {}%)", h, s, l)
-}
-
-pub fn to_rgb_bytes_from_hsl_ratios(ratios: [f32; 3]) -> [u8; 3] {
-    let [h, s, l] = ratios;
-
-    let m2 = if l <= 0.5 {
-        l * (s + 1.0)
-    } else {
-        l + s - l * s
-    };
-    let m1 = l * 2.0 - m2;
-
-    let r = convert_hue_to_rgb_byte(m1, m2, h + 0.33333);
-    let g = convert_hue_to_rgb_byte(m1, m2, h);
-    let b = convert_hue_to_rgb_byte(m1, m2, h - 0.33333);
-
-    [r, g, b]
-}
-
-pub fn convert_hue_to_rgb_byte(m1: f32, m2: f32, h: f32) -> u8 {
-    let h = if h < 0.0 {
-        h + 1.0
-    } else if h > 1.0 {
-        h - 1.0
-    } else {
-        h
-    };
-
-    let byte = if h * 6.0 < 1.0 {
-        m1 + (m2 - m1) * h * 6.0
-    } else if h * 2.0 < 1.0 {
-        m2
-    } else if h * 3.0 < 2.0 {
-        m1 + (m2 - m1) * (0.66666 - h) * 6.0
-    } else {
-        m1
-    };
-
-    f32::round(byte * 255.0) as u8
-}
-
-pub fn to_hsl_ratios_from_rgb_bytes(bytes: [u8; 3]) -> [f32; 3] {
-    let [r, g, b] = bytes;
-
-    let r = r as f32 / 255.0;
-    let g = g as f32 / 255.0;
-    let b = b as f32 / 255.0;
-
-    let max = f32::max(r, f32::max(g, b));
-    let min = f32::min(r, f32::min(g, b));
-    let delta = max - min;
-
-    let mut h = 0.0;
-    let mut s = 0.0;
-    let l = (max + min) / 2.0;
-
-    if l > 0.0 && l < 1.0 {
-        s = delta / if l < 0.5 {
-            2.0 * l
-        } else {
-            2.0 - 2.0 * l
-        };
-    }
-
-    if delta > 0.0 {
-        if max == r && max != g {
-            h += (g - b) / delta;
-        }
-        if max == g && max != b {
-            h += 2.0 + (b - r) / delta;
-        }
-        if max == b && max != r {
-            h += 4.0 + (r - g) / delta;
-        }
-        h /= 6.0;
-    }
-
-    [h, s, l]
-}
-
-pub fn to_rgb_bytes(num: u32) -> [u8; 3] {
-    let b1 = num >> 16;
-    let b2 = num >> 8;
-    let b3 = num;
-    return [b1 as u8, b2 as u8, b3 as u8];
-}
-
-pub fn to_hex_value_from_rgb_bytes(bytes: [u8; 3]) -> u32 {
-    let mut sum: u32 = 0;
-    for (i, byte) in bytes.iter().enumerate() {
-        sum += (*byte as u32) << ((bytes.len() - (i + 1)) * 8);
-    }
-    return sum;
-}
-
-pub fn to_name_from_rgb_bytes(bytes: [u8; 3]) -> String {
-    let [r, g, b] = bytes;
-    let [h, s, l] = to_hsl_ratios_from_rgb_bytes(bytes);
-
-    // Not entirely sure why this conversion is done, but we have to do it
-    // if we want to get the same name as name-that-color.
-    let h = f32::floor(h * 255.0);
-    let s = f32::floor(s * 255.0);
-    let l = f32::floor(l * 255.0);
-
-    let mut df: i32 = -1;
-    let mut colour: HexColourPair = COLOUR_PAIRS[0];
-
-    for pair in COLOUR_PAIRS {
-        let [pr, pg, pb] = to_rgb_bytes(pair.0);
-        let [ph, ps, pl] = to_hsl_ratios_from_rgb_bytes(to_rgb_bytes(pair.0));
-
-        // Not entirely sure why this conversion is done, but we have to do it
-        // if we want to get the same name as name-that-color.
-        let ph = f32::floor(ph * 255.0);
-        let ps = f32::floor(ps * 255.0);
-        let pl = f32::floor(pl * 255.0);
-
-        let dr = i32::pow(r as i32 - pr as i32, 2);
-        let dg = i32::pow(g as i32 - pg as i32, 2);
-        let db = i32::pow(b as i32 - pb as i32, 2);
-
-        let dh = i32::pow(h as i32 - ph as i32, 2);
-        let ds = i32::pow(s as i32 - ps as i32, 2);
-        let dl = i32::pow(l as i32 - pl as i32, 2);
-
-        let next = (dr + dg + db) + (dh + ds + dl).wrapping_mul(2);
-
-        if df < 0 || df > next {
-            df = next as i32;
-            colour = pair;
-        }
-    }
-
-    colour.1.to_string()
-}
-
-pub fn to_hex_value_from_name(s: &str) -> Result<u32, ParseError> {
-    let s = s.to_ascii_lowercase();
-    for pair in COLOUR_PAIRS {
-        let pair_name = pair.1.to_ascii_lowercase();
-        if s == pair_name {
-            return Ok(pair.0);
-        }
-    }
-
-    return Err(ParseError::InvalidName);
-}
-
-pub fn to_hex_string_from_rgb_bytes(bytes: [u8; 3]) -> String {
-    let [r, g, b] = bytes;
-    format!("#{:02X}{:02X}{:02X}", r, g, b)
-}
+pub struct ColourNaming;
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
@@ -195,52 +12,243 @@ pub enum ParseError {
     InvalidName,
 }
 
-pub fn to_hex_value_from_hex_string(s: &str) -> Result<u32, ParseError> {
-    let s = s.to_ascii_lowercase();
-    let re = match regex::Regex::new("^((#)?(([a-z0-9]{8})|([a-z0-9]{6})|([a-z0-9]{3})))$") {
-        Ok(re) => re,
-        Err(_) => return Err(ParseError::InvalidRegex)
-    };
-    let captures = match re.captures(&s) {
-        Some(caps) => caps,
-        None => return Err(ParseError::InvalidCapture)
-    };
-
-    match (captures.get(4), captures.get(5), captures.get(6)) {
-        (Some(hex), _, _) => {
-            let hex = hex.as_str();
-            match u32::from_str_radix(hex, 16) {
-                Ok(hex) => Ok(hex >> 8),
-                Err(_) => return Err(ParseError::InvalidNumber),
-            }
-        },
-
-        (_, Some(hex), _) => {
-            let hex = hex.as_str();
-            match u32::from_str_radix(hex, 16) {
-                Ok(hex) => Ok(hex),
-                Err(_) => return Err(ParseError::InvalidNumber)
-            }
-        },
-
-        (_, _, Some(hex)) => {
-            let hex = hex.as_str();
-            let hex = hex.chars().map(|ch| format!("{}{}", ch, ch)).collect::<String>();
-            match u32::from_str_radix(&hex, 16) {
-                Ok(hex) => Ok(hex),
-                Err(_) => return Err(ParseError::InvalidNumber)
-            }
-        },
-
-        _ => return Err(ParseError::InvalidCapture)
+impl ColourNaming {
+    pub fn to_rgb_string_from_rgb_bytes(bytes: Rgb) -> String {
+        let [r, g, b] = bytes;
+        format!("rgb({}, {}, {})", r, g, b)
     }
-}
 
-pub fn to_rgb_bytes_from_hex_value(value: u32) -> [u8; 3] {
-    let r = (value >> 16 & 0xff) as u8;
-    let g = (value >>  8 & 0xff) as u8;
-    let b = (value & 0xff) as u8;
-    [r, g, b]
+    pub fn to_hsl_values_from_hsl_ratios(ratios: HslRatios) -> HslValues {
+        let [h, s, l] = ratios;
+        let h = if h >= 0.0 {
+            h
+        } else {
+            h + 1.0
+        };
+        let h = f32::round(h * 360.0) as u32;
+        let s = f32::round(s * 100.0) as u32;
+        let l = f32::round(l * 100.0) as u32;
+        [h, s, l]
+    }
+
+    pub fn to_hsl_ratios_from_hsl_values(values: HslValues) -> HslRatios {
+        let [h, s, l] = values;
+        let is_above_180 = h >= 180;
+        let h = h as f32 / 360.0;
+        let s = s as f32 / 100.0;
+        let l = l as f32 / 100.0;
+        let h = if is_above_180 {
+            h
+        } else {
+            h - 1.0
+        };
+        [h, s, l]
+    }
+
+    pub fn to_hsl_string_from_hsl_values(values: HslValues) -> String {
+        let [h, s, l] = values;
+        format!("hsl({}°, {}%, {}%)", h, s, l)
+    }
+
+    pub fn to_rgb_bytes_from_hsl_ratios(ratios: HslRatios) -> Rgb {
+        let [h, s, l] = ratios;
+
+        let m2 = if l <= 0.5 {
+            l * (s + 1.0)
+        } else {
+            l + s - l * s
+        };
+        let m1 = l * 2.0 - m2;
+
+        let r = Self::convert_hue_to_rgb_byte(m1, m2, h + 0.33333);
+        let g = Self::convert_hue_to_rgb_byte(m1, m2, h);
+        let b = Self::convert_hue_to_rgb_byte(m1, m2, h - 0.33333);
+
+        [r, g, b]
+    }
+
+    pub fn convert_hue_to_rgb_byte(m1: f32, m2: f32, h: f32) -> u8 {
+        let h = if h < 0.0 {
+            h + 1.0
+        } else if h > 1.0 {
+            h - 1.0
+        } else {
+            h
+        };
+
+        let byte = if h * 6.0 < 1.0 {
+            m1 + (m2 - m1) * h * 6.0
+        } else if h * 2.0 < 1.0 {
+            m2
+        } else if h * 3.0 < 2.0 {
+            m1 + (m2 - m1) * (0.66666 - h) * 6.0
+        } else {
+            m1
+        };
+
+        f32::round(byte * 255.0) as u8
+    }
+
+    pub fn to_hsl_ratios_from_rgb_bytes(bytes: Rgb) -> HslRatios {
+        let [r, g, b] = bytes;
+
+        let r = r as f32 / 255.0;
+        let g = g as f32 / 255.0;
+        let b = b as f32 / 255.0;
+
+        let max = f32::max(r, f32::max(g, b));
+        let min = f32::min(r, f32::min(g, b));
+        let delta = max - min;
+
+        let mut h = 0.0;
+        let mut s = 0.0;
+        let l = (max + min) / 2.0;
+
+        if l > 0.0 && l < 1.0 {
+            s = delta / if l < 0.5 {
+                2.0 * l
+            } else {
+                2.0 - 2.0 * l
+            };
+        }
+
+        if delta > 0.0 {
+            if max == r && max != g {
+                h += (g - b) / delta;
+            }
+            if max == g && max != b {
+                h += 2.0 + (b - r) / delta;
+            }
+            if max == b && max != r {
+                h += 4.0 + (r - g) / delta;
+            }
+            h /= 6.0;
+        }
+
+        [h, s, l]
+    }
+
+    pub fn to_rgb_bytes(num: u32) -> Rgb {
+        let b1 = num >> 16;
+        let b2 = num >> 8;
+        let b3 = num;
+        return [b1 as u8, b2 as u8, b3 as u8];
+    }
+
+    pub fn to_hex_value_from_rgb_bytes(bytes: Rgb) -> u32 {
+        let mut sum: u32 = 0;
+        for (i, byte) in bytes.iter().enumerate() {
+            sum += (*byte as u32) << ((bytes.len() - (i + 1)) * 8);
+        }
+        return sum;
+    }
+
+    pub fn to_name_from_rgb_bytes(bytes: Rgb) -> String {
+        let [r, g, b] = bytes;
+        let [h, s, l] = Self::to_hsl_ratios_from_rgb_bytes(bytes);
+
+        // Not entirely sure why this conversion is done, but we have to do it
+        // if we want to get the same name as name-that-color.
+        let h = f32::floor(h * 255.0);
+        let s = f32::floor(s * 255.0);
+        let l = f32::floor(l * 255.0);
+
+        let mut df: i32 = -1;
+        let mut colour: HexColourPair = COLOUR_PAIRS[0];
+
+        for pair in COLOUR_PAIRS {
+            let [pr, pg, pb] = Self::to_rgb_bytes(pair.0);
+            let [ph, ps, pl] = Self::to_hsl_ratios_from_rgb_bytes(Self::to_rgb_bytes(pair.0));
+
+            // Not entirely sure why this conversion is done, but we have to do it
+            // if we want to get the same name as name-that-color.
+            let ph = f32::floor(ph * 255.0);
+            let ps = f32::floor(ps * 255.0);
+            let pl = f32::floor(pl * 255.0);
+
+            let dr = i32::pow(r as i32 - pr as i32, 2);
+            let dg = i32::pow(g as i32 - pg as i32, 2);
+            let db = i32::pow(b as i32 - pb as i32, 2);
+
+            let dh = i32::pow(h as i32 - ph as i32, 2);
+            let ds = i32::pow(s as i32 - ps as i32, 2);
+            let dl = i32::pow(l as i32 - pl as i32, 2);
+
+            let next = (dr + dg + db) + (dh + ds + dl).wrapping_mul(2);
+
+            if df < 0 || df > next {
+                df = next as i32;
+                colour = pair;
+            }
+        }
+
+        colour.1.to_string()
+    }
+
+    pub fn to_hex_value_from_name(s: &str) -> Result<u32, ParseError> {
+        let s = s.to_ascii_lowercase();
+        for pair in COLOUR_PAIRS {
+            let pair_name = pair.1.to_ascii_lowercase();
+            if s == pair_name {
+                return Ok(pair.0);
+            }
+        }
+
+        return Err(ParseError::InvalidName);
+    }
+
+    pub fn to_hex_string_from_rgb_bytes(bytes: Rgb) -> String {
+        let [r, g, b] = bytes;
+        format!("#{:02X}{:02X}{:02X}", r, g, b)
+    }
+
+    pub fn to_hex_value_from_hex_string(s: &str) -> Result<u32, ParseError> {
+        let s = s.to_ascii_lowercase();
+        let re = match regex::Regex::new("^((#)?(([a-z0-9]{8})|([a-z0-9]{6})|([a-z0-9]{3})))$") {
+            Ok(re) => re,
+            Err(_) => return Err(ParseError::InvalidRegex)
+        };
+        let captures = match re.captures(&s) {
+            Some(caps) => caps,
+            None => return Err(ParseError::InvalidCapture)
+        };
+
+        match (captures.get(4), captures.get(5), captures.get(6)) {
+            (Some(hex), _, _) => {
+                let hex = hex.as_str();
+                match u32::from_str_radix(hex, 16) {
+                    Ok(hex) => Ok(hex >> 8),
+                    Err(_) => return Err(ParseError::InvalidNumber),
+                }
+            },
+
+            (_, Some(hex), _) => {
+                let hex = hex.as_str();
+                match u32::from_str_radix(hex, 16) {
+                    Ok(hex) => Ok(hex),
+                    Err(_) => return Err(ParseError::InvalidNumber)
+                }
+            },
+
+            (_, _, Some(hex)) => {
+                let hex = hex.as_str();
+                let hex = hex.chars().map(|ch| format!("{}{}", ch, ch)).collect::<String>();
+                match u32::from_str_radix(&hex, 16) {
+                    Ok(hex) => Ok(hex),
+                    Err(_) => return Err(ParseError::InvalidNumber)
+                }
+            },
+
+            _ => return Err(ParseError::InvalidCapture)
+        }
+    }
+
+    pub fn to_rgb_bytes_from_hex_value(value: u32) -> Rgb {
+        let r = (value >> 16 & 0xff) as u8;
+        let g = (value >>  8 & 0xff) as u8;
+        let b = (value & 0xff) as u8;
+        [r, g, b]
+    }
 }
 
 #[cfg(test)]
