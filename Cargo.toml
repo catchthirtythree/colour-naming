@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "cn-cli",
-    "cn-gui",
+    "cn-gui/src-tauri",
     "cn-lib",
 ]
