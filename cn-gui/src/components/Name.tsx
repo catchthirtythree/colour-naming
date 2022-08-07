@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 import './Name.css';
 import { IColourInfo } from '../types/colour-info';
 import { ALL_PAIRS, IColourPair } from '../types/colour-pair';
+import { Info } from './Info';
 
 export function Name(): ReactElement<any, any> {
   const DEFAULT_COLOUR_NAME = 'Gimblet';
@@ -33,56 +34,38 @@ export function Name(): ReactElement<any, any> {
 
   return (
     <div id="Name_container">
-      <div id="colour-name-container">
-        <select id="colour-select"
-          onChange={(event) => {
-            let currentValue = event.target.value;
-            let index = Number(currentValue);
-            let pair = ALL_PAIRS[index];
-            console.log(pair, pair.getRGB(), pair.toStringHex());
-            handleColourChange(pair.name);
-          }}
-        >
-          {
-            colourPairs.map((pair, index) => {
-              return (
-                <option
-                  key={index}
-                  value={index}
-                  style={{
-                    backgroundColor: pair.toStringHex(),
-                    color: pair.isColourLight() ? 'black' : 'white',
-                    mixBlendMode: 'lighten',
-                  }}>
-                  {pair.name}
-                </option>
-              );
-            })
-          }
-        </select>
-      </div>
+      <select id="colour-selector"
+        onChange={(event) => {
+          let currentValue = event.target.value;
+          let index = Number(currentValue);
+          let pair = ALL_PAIRS[index];
+          console.log(pair, pair.getRGB(), pair.toStringHex());
+          handleColourChange(pair.name);
+        }}
+      >
+        {
+          colourPairs.map((pair, index) => {
+            return (
+              <option
+                key={index}
+                value={index}
+                style={{
+                  backgroundColor: pair.toStringHex(),
+                  color: pair.isColourLight() ? 'black' : 'white',
+                  mixBlendMode: 'lighten',
+                }}>
+                {pair.name}
+              </option>
+            );
+          })
+        }
+      </select>
 
       <div id="arrow-container">
         <span>--&gt;</span>
       </div>
 
-      <div id="colour-container">
-        <div id="grid-headers">
-          <div className="header">===</div>
-          <div className="header">hex</div>
-          <div className="header">rgb</div>
-          <div className="header">name</div>
-        </div>
-
-        <div id="grid-values">
-          <div className="value">
-            <div id="colour" style={{ backgroundColor: colourInfo.hex }}></div>
-          </div>
-          <div className="value">{colourInfo.hex}</div>
-          <div className="value">{colourInfo.rgb}</div>
-          <div className="value">{colourInfo.name}</div>
-        </div>
-      </div>
+      <Info colour={colourInfo} />
     </div>
   );
 }

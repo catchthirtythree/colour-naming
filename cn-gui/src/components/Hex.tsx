@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 
 import './Hex.css';
 import { IColourInfo } from '../types/colour-info';
+import { Info } from './Info';
 
 export function Hex(): ReactElement<any, any> {
   const DEFAULT_HEX = '#BABA69';
@@ -61,23 +62,7 @@ export function Hex(): ReactElement<any, any> {
         <span>--&gt;</span>
       </div>
 
-      <div id="colour-container">
-        <div id="grid-headers">
-          <div className="header">===</div>
-          <div className="header">hex</div>
-          <div className="header">rgb</div>
-          <div className="header">name</div>
-        </div>
-
-        <div id="grid-values">
-          <div className="value">
-            <div id="colour" style={{ backgroundColor: colourInfo.hex }}></div>
-          </div>
-          <div className="value">{colourInfo.hex}</div>
-          <div className="value">{colourInfo.rgb}</div>
-          <div className="value">{colourInfo.name}</div>
-        </div>
-      </div>
+      <Info colour={colourInfo} />
     </div>
   );
 }

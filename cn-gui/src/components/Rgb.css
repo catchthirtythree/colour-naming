@@ -57,34 +57,3 @@ div#Rgb_container div#arrow-container {
   margin-right: 20px;
   user-select: none;
 }
-
-div#Rgb_container div#colour-container {
-  display: grid;
-  grid-template-columns: 60px 250px;
-
-  font-family: 'JetBrains Mono Regular';
-  font-size: 18px;
-}
-
-div#Rgb_container div#colour-container div#grid-headers div.header {
-  font-family: inherit;
-  font-size: inherit;
-  font-weight: bold;
-  height: 24px;
-  text-transform: uppercase;
-  user-select: none;
-}
-
-div#Rgb_container div#colour-container div#grid-values div.value {
-  font-family: inherit;
-  font-size: inherit;
-  height: 24px;
-  user-select: all;
-}
-
-div#Rgb_container div#colour-container div#grid-values div.value div#colour {
-  border: 1px solid black;
-  border-radius: 3px;
-  width: 60px;
-  height: 20px;
-}
