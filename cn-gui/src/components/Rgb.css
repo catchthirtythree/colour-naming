@@ -12,6 +12,8 @@ div#Rgb_container {
 div#Rgb_container div#input-container {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  width: 300px;
 }
 
 div#Rgb_container div#input-container div.colour {
@@ -19,7 +21,7 @@ div#Rgb_container div#input-container div.colour {
   flex-direction: row;
 
   font-family: 'JetBrains Mono Regular';
-  font-size: 32px;
+  font-size: 24px;
 }
 
 div#Rgb_container div#input-container div.colour:not(:last-child) {
@@ -43,7 +45,7 @@ div#Rgb_container div#input-container div.colour input {
   padding-right: 5px;
   text-align: center;
   text-transform: lowercase;
-  width: 66px;
+  width: 50px;
 }
 
 div#Rgb_container div#input-container div.colour input[type=number]::-webkit-inner-spin-button,

@@ -1,6 +1,6 @@
 div#Info_container div#colour-container {
   display: grid;
-  grid-template-columns: 60px 250px;
+  grid-template-columns: 60px 300px;
 
   font-family: 'JetBrains Mono Regular';
   font-size: 18px;
@@ -16,10 +16,6 @@ div#Info_container div#colour-container div#grid-headers div.header {
 }
 
 div#Info_container div#colour-container div#grid-values div.value {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
   font-family: inherit;
   font-size: inherit;
   height: 24px;
@@ -29,7 +25,6 @@ div#Info_container div#colour-container div#grid-values div.value {
 div#Info_container div#colour-container div#grid-values div.value div#colour {
   border: 1px solid black;
   border-radius: 3px;
-  box-sizing: border-box;
-  height: 20px;
+  height: 22px;
   width: 60px;
 }

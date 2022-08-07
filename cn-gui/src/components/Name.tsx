@@ -13,9 +13,9 @@ export function Name(): ReactElement<any, any> {
   const [colourPairs, setColourPairs] = useState<IColourPair[]>(ALL_PAIRS);
 
   const [colourInfo, setColourInfo] = useState<IColourInfo>({
-    hex: '#BABA69',
-    rgb: 'rgb(186, 186, 105)',
-    name: 'Gimblet',
+    hex: '#000000',
+    rgb: 'rgb(0, 0, 0)',
+    name: 'Black',
   });
 
   const handleColourChange = async (colourName: string) => {
@@ -34,32 +34,34 @@ export function Name(): ReactElement<any, any> {
 
   return (
     <div id="Name_container">
-      <select id="colour-selector"
-        onChange={(event) => {
-          let currentValue = event.target.value;
-          let index = Number(currentValue);
-          let pair = ALL_PAIRS[index];
-          console.log(pair, pair.getRGB(), pair.toStringHex());
-          handleColourChange(pair.name);
-        }}
-      >
-        {
-          colourPairs.map((pair, index) => {
-            return (
-              <option
-                key={index}
-                value={index}
-                style={{
-                  backgroundColor: pair.toStringHex(),
-                  color: pair.isColourLight() ? 'black' : 'white',
-                  mixBlendMode: 'lighten',
-                }}>
-                {pair.name}
-              </option>
-            );
-          })
-        }
-      </select>
+      <div id="input-container">
+        <select id="colour-selector"
+          onChange={(event) => {
+            let currentValue = event.target.value;
+            let index = Number(currentValue);
+            let pair = ALL_PAIRS[index];
+            console.log(pair, pair.getRGB(), pair.toStringHex());
+            handleColourChange(pair.name);
+          }}
+        >
+          {
+            colourPairs.map((pair, index) => {
+              return (
+                <option
+                  key={index}
+                  value={index}
+                  style={{
+                    backgroundColor: pair.toStringHex(),
+                    color: pair.isColourLight() ? 'black' : 'white',
+                    mixBlendMode: 'lighten',
+                  }}>
+                  {pair.name}
+                </option>
+              );
+            })
+          }
+        </select>
+      </div>
 
       <div id="arrow-container">
         <span>--&gt;</span>
