@@ -5,50 +5,6 @@ import './Rgb.css';
 import { IColourInfo } from '../types/colour-info';
 import { clamp } from '../utils/clamp';
 
-class RgbColour {
-  r?: string;
-  g?: string;
-  b?: string;
-
-  constructor(r?: string, g?: string, b?: string) {
-    this.r = this.clamp(r);
-    this.g = this.clamp(g);
-    this.b = this.clamp(b);
-  }
-
-  clamp(colour?: string): string | undefined {
-    if (!colour) {
-      return colour;
-    }
-
-    let num = Number(colour);
-    let clamped = clamp(num, 0, 255);
-    return clamped.toString();
-  }
-
-  to_rgb_numbers(): [number, number, number] {
-    return [Number(this.r), Number(this.g), Number(this.b)];
-  }
-
-  to_rgb_string(): string {
-    let rgb = [this.r, this.g, this.b];
-    let filtered = rgb.filter(col => col !== undefined);
-    return `rgb(${filtered.join(', ')})`;
-  }
-
-  static parse_rgb_string(rgb: string): RgbColour {
-    let regex = new RegExp('rgb\\((.*)\\)');
-    let match = rgb.match(regex);
-    if (!match || !match[1]) {
-      return new RgbColour();
-    }
-
-    let split = match[1].split(',');
-    let [r, g, b] = split.map(col => col.trim());
-    return new RgbColour(r, g, b);
-  }
-}
-
 export function Rgb(): ReactElement<any, any> {
   const DEFAULT_R = 186;
   const DEFAULT_G = 186;
