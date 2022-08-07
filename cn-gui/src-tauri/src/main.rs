@@ -3,13 +3,19 @@
     windows_subsystem = "windows"
 )]
 
-use cn_lib::{ColourNaming, COLOUR_PAIRS, HexColourPair};
+use cn_lib::{ColourNaming, COLOUR_PAIRS};
 use serde::Serialize;
 
 #[derive(Serialize)]
 struct ColourInfo {
     hex: String,
     rgb: String,
+    name: String,
+}
+
+#[derive(Serialize)]
+struct ColourPair {
+    hex: u32,
     name: String,
 }
 
@@ -55,8 +61,13 @@ fn convert_rgb_string(r: u32, g: u32, b: u32) -> Option<ColourInfo> {
 }
 
 #[tauri::command]
-fn get_colours() -> [HexColourPair; 1566] {
-    COLOUR_PAIRS
+fn get_colours() -> Vec<ColourPair> {
+    COLOUR_PAIRS.into_iter().map(|pair| {
+        ColourPair {
+            hex: pair.0,
+            name: pair.1.to_string(),
+        }
+    }).collect::<Vec<ColourPair>>()
 }
 
 fn main() {
@@ -65,6 +76,7 @@ fn main() {
             convert_hex_string,
             convert_name_string,
             convert_rgb_string,
+            get_colours,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running tauri application.");

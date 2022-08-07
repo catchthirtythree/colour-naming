@@ -1,0 +1,90 @@
+div#Name_container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid black;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+div#Name_container div#input-container {
+  display: flex;
+  flex-direction: row;
+}
+
+div#Name_container div#input-container div.colour {
+  display: flex;
+  flex-direction: row;
+
+  font-family: 'JetBrains Mono Regular';
+  font-size: 32px;
+}
+
+div#Name_container div#input-container div.colour:not(:last-child) {
+  margin-right: 10px;
+}
+
+div#Name_container div#input-container div.colour span {
+  margin-right: 5px;
+  user-select: none;
+}
+
+div#Name_container div#input-container div.colour input {
+  background-color: transparent;
+  border: 1px solid black;
+  border-radius: 3px;
+  caret-color: black;
+  font-family: inherit;
+  font-size: inherit;
+  outline: 0;
+  padding-left: 5px;
+  padding-right: 5px;
+  text-align: center;
+  text-transform: lowercase;
+  width: 66px;
+}
+
+div#Name_container div#input-container div.colour input[type=number]::-webkit-inner-spin-button,
+div#Name_container div#input-container div.colour input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+div#Name_container div#arrow-container {
+  margin-left: 20px;
+  margin-right: 20px;
+  user-select: none;
+}
+
+div#Name_container div#colour-container {
+  display: grid;
+  grid-template-columns: 60px 250px;
+
+  font-family: 'JetBrains Mono Regular';
+  font-size: 18px;
+}
+
+div#Name_container div#colour-container div#grid-headers div.header {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: bold;
+  height: 24px;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+div#Name_container div#colour-container div#grid-values div.value {
+  font-family: inherit;
+  font-size: inherit;
+  height: 24px;
+  user-select: all;
+}
+
+div#Name_container div#colour-container div#grid-values div.value div#colour {
+  border: 1px solid black;
+  border-radius: 3px;
+  width: 60px;
+  height: 20px;
+}
