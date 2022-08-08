@@ -38,15 +38,17 @@ export function Hex(): ReactElement<any, any> {
           <input
             style={{ color: colourInfo ? colourInfo.hex : 'black' }}
             pattern="^[#]([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
-            maxLength={7}
             value={inputValue}
             onChange={(event) => {
               // Get the current value from the input.
               let currentValue = event.target.value;
+              console.log(currentValue);
               // Replace any non-hex values from the string.
               let cleanedValue = currentValue.replaceAll(/[^0-9a-fA-F]/g, '');
+              // Don't let the string be longer than 6 characters after cleaned.
+              let maxLengthValue = cleanedValue.substring(0, 6);
               // Add the octothorpe to the start of the string.
-              let hexValue = `#${cleanedValue}`;
+              let hexValue = `#${maxLengthValue}`;
               handleColourInfo(hexValue);
               setInputValue(hexValue);
             }}
