@@ -42,7 +42,6 @@ export function Hex(): ReactElement<any, any> {
             onChange={(event) => {
               // Get the current value from the input.
               let currentValue = event.target.value;
-              console.log(currentValue);
               // Replace any non-hex values from the string.
               let cleanedValue = currentValue.replaceAll(/[^0-9a-fA-F]/g, '');
               // Don't let the string be longer than 6 characters after cleaned.
