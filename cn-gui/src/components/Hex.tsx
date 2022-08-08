@@ -6,14 +6,14 @@ import { IColourInfo } from '../types/colour-info';
 import { Info } from './Info';
 
 export function Hex(): ReactElement<any, any> {
-  const DEFAULT_HEX = '#BABA69';
+  const DEFAULT_HEX = '#4C4F56';
 
   const [inputValue, setInputValue] = useState<string>(DEFAULT_HEX);
   const [lastValidInput, setLastValidInput] = useState<string>(DEFAULT_HEX);
   const [colourInfo, setColourInfo] = useState<IColourInfo>({
-    hex: '#BABA69',
-    rgb: 'rgb(186, 186, 105)',
-    name: 'Gimblet',
+    hex: DEFAULT_HEX,
+    rgb: 'rgb(76, 79, 86)',
+    name: 'Abbey',
   });
 
   const handleColourInfo = async (inputValue: string) => {

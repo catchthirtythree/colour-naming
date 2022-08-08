@@ -7,18 +7,18 @@ import { clamp } from '../utils/clamp';
 import { Info } from './Info';
 
 export function Rgb(): ReactElement<any, any> {
-  const DEFAULT_R = 186;
-  const DEFAULT_G = 186;
-  const DEFAULT_B = 105;
+  const DEFAULT_R = 76;
+  const DEFAULT_G = 79;
+  const DEFAULT_B = 86;
 
   const [colourRed, setColourRed] = useState<number>(DEFAULT_R);
   const [colourGreen, setColourGreen] = useState<number>(DEFAULT_G);
   const [colourBlue, setColourBlue] = useState<number>(DEFAULT_B);
 
   const [colourInfo, setColourInfo] = useState<IColourInfo>({
-    hex: '#BABA69',
-    rgb: 'rgb(186, 186, 105)',
-    name: 'Gimblet',
+    hex: '#4C4F56',
+    rgb: `rgb(${DEFAULT_R}, ${DEFAULT_G}, ${DEFAULT_B})`,
+    name: 'Abbey',
   });
 
   const handleColourChange = async (r: number, g: number, b: number) => {
