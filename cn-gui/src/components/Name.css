@@ -17,6 +17,7 @@ div#Name_container div#input-container {
 }
 
 div#Name_container div#input-container select#colour-selector {
+  cursor: pointer;
   font-family: 'JetBrains Mono Regular';
   font-size: 18px;
   text-overflow: ellipsis;

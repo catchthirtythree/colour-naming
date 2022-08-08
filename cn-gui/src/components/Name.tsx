@@ -5,17 +5,18 @@ import './Name.css';
 import { IColourInfo } from '../types/colour-info';
 import { ALL_PAIRS, IColourPair } from '../types/colour-pair';
 import { Info } from './Info';
+import { sortArray } from '../utils/sort';
 
 export function Name(): ReactElement<any, any> {
-  const DEFAULT_COLOUR_NAME = 'Gimblet';
-
-  const [colourName, setColourName] = useState<string>(DEFAULT_COLOUR_NAME);
-  const [colourPairs, setColourPairs] = useState<IColourPair[]>(ALL_PAIRS);
-
+  const [colourPairs] = useState<IColourPair[]>(
+    sortArray(ALL_PAIRS, (item1: IColourPair, item2: IColourPair) => {
+      return item1.name.localeCompare(item2.name);
+    })
+  );
   const [colourInfo, setColourInfo] = useState<IColourInfo>({
-    hex: '#000000',
-    rgb: 'rgb(0, 0, 0)',
-    name: 'Black',
+    hex: '#4C4F56',
+    rgb: 'rgb(76, 79, 86)',
+    name: 'Abbey',
   });
 
   const handleColourChange = async (colourName: string) => {
@@ -39,8 +40,7 @@ export function Name(): ReactElement<any, any> {
           onChange={(event) => {
             let currentValue = event.target.value;
             let index = Number(currentValue);
-            let pair = ALL_PAIRS[index];
-            console.log(pair, pair.getRGB(), pair.toStringHex());
+            let pair = colourPairs[index];
             handleColourChange(pair.name);
           }}
         >
