@@ -2,3 +2,62 @@ div#App_container {
   display: flex;
   flex-direction: column;
 }
+
+div#App_container div#header {
+  border-bottom: 1px solid black;
+  font-size: 38px;
+  padding: 8px;
+  padding-left: 16px;
+  text-align: center;
+}
+
+div#App_container div#content {
+  margin: 8px;
+  margin-top: 16px;
+}
+
+div#App_container div#content div#routing {
+  display: flex;
+  flex-direction: row;
+}
+
+div#App_container div#content div#routing div.route {
+  flex: 1;
+
+  border: 1px solid black;
+  cursor: pointer;
+  padding: 5px;
+  text-align: center;
+}
+
+div#App_container div#content div#routing div.route[data-selected="true"]:nth-child(1) {
+  background-color: #dc143c;
+}
+
+div#App_container div#content div#routing div.route[data-selected="true"]:nth-child(2) {
+  background-color: #228b22;
+}
+
+div#App_container div#content div#routing div.route[data-selected="true"]:nth-child(3) {
+  background-color: #0000ff;
+}
+
+div#App_container div#content div#routing div.route:nth-child(1):hover {
+  background-color: #dc143ca0;
+}
+
+div#App_container div#content div#routing div.route:nth-child(2):hover {
+  background-color: #228b22a0;
+}
+
+div#App_container div#content div#routing div.route:nth-child(3):hover {
+  background-color: #0000ffa0;
+}
+
+div#App_container div#content div#routing div.route:first-child {
+  border-top-left-radius: 5px;
+}
+
+div#App_container div#content div#routing div.route:last-child {
+  border-top-right-radius: 5px;
+}
