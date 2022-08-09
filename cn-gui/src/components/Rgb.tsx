@@ -6,6 +6,16 @@ import { IColourInfo } from '../types/colour-info';
 import { clamp } from '../utils/clamp';
 import { Info } from './Info';
 
+export async function convertRgbToColour(r: number, g: number, b: number): Promise<IColourInfo> {
+  try {
+    return await invoke<IColourInfo>('convert_rgb_string', {
+      r, g, b
+    });
+  } catch (err) {
+    throw "Unhandled exception converting rgb.";
+  }
+}
+
 export function Rgb(): ReactElement<any, any> {
   const DEFAULT_R = 76;
   const DEFAULT_G = 79;
@@ -21,24 +31,12 @@ export function Rgb(): ReactElement<any, any> {
     name: 'Abbey',
   });
 
-  const handleColourChange = async (r: number, g: number, b: number) => {
-    try {
-      const response = await invoke<IColourInfo>('convert_rgb_string', {
-        r: colourRed,
-        g: colourGreen,
-        b: colourBlue
-      });
-
-      if (response) {
-        setColourInfo(response);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
   useEffect(() => {
-    handleColourChange(colourRed, colourGreen, colourBlue);
+    convertRgbToColour(colourRed, colourGreen, colourBlue).then(colour => {
+      if (colour) {
+        setColourInfo(colour);
+      }
+    })
   }, [colourRed, colourGreen, colourBlue]);
 
   return (

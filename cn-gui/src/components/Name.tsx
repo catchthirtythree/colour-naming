@@ -7,31 +7,38 @@ import { ALL_PAIRS, IColourPair } from '../types/colour-pair';
 import { Info } from './Info';
 import { sortArray } from '../utils/sort';
 
+export async function convertNameToColour(name: string): Promise<IColourInfo> {
+  try {
+    return await invoke<IColourInfo>('convert_name_string', { name });
+  } catch (err) {
+    throw "Unhandled exception converting name.";
+  }
+}
+
 export function Name(): ReactElement<any, any> {
+  // @TODO(michael): Set default colour similarly to Hex/Rgb.
+
   const [colourPairs] = useState<IColourPair[]>(
     sortArray(ALL_PAIRS, (item1: IColourPair, item2: IColourPair) => {
       return item1.name.localeCompare(item2.name);
     })
   );
+
+  const [colourName, setColourName] = useState<string>('Abbey');
   const [colourInfo, setColourInfo] = useState<IColourInfo>({
     hex: '#4C4F56',
     rgb: 'rgb(76, 79, 86)',
     name: 'Abbey',
   });
 
-  const handleColourChange = async (colourName: string) => {
-    try {
-      const response = await invoke<IColourInfo>('convert_name_string', {
-        name: colourName
-      });
-
-      if (response) {
-        setColourInfo(response);
+  useEffect(() => {
+    convertNameToColour(colourName).then(colour => {
+      if (colour) {
+        setColourInfo(colour);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  }
+    })
+  }, [colourName]);
+
 
   return (
     <div id="Name_container">
@@ -41,7 +48,7 @@ export function Name(): ReactElement<any, any> {
             let currentValue = event.target.value;
             let index = Number(currentValue);
             let pair = colourPairs[index];
-            handleColourChange(pair.name);
+            setColourName(pair.name);
           }}
         >
           {

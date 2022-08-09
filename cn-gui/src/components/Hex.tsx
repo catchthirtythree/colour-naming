@@ -1,35 +1,50 @@
-import { ReactElement, useState } from 'react';
+import { Component, ReactElement, useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 
 import './Hex.css';
-import { IColourInfo } from '../types/colour-info';
+import { ColourInfo, IColourInfo } from '../types/colour-info';
 import { Info } from './Info';
+import { useParams } from 'react-router-dom';
+
+export function cleanHex(str: string): string {
+  // Replace any non-hex values from the string.
+  let cleanedValue = str.replaceAll(/[^0-9a-fA-F]/g, '');
+  // Don't let the string be longer than 6 characters after cleaned.
+  let maxLengthValue = cleanedValue.substring(0, 6);
+  // Add the octothorpe to the start of the string.
+  return `#${maxLengthValue}`;
+}
+
+export async function convertHexToColour(hex: string): Promise<IColourInfo> {
+  try {
+    return await invoke<IColourInfo>('convert_hex_string', { hex });
+  } catch (err) {
+    throw "Unhandled exception converting hex.";
+  }
+}
 
 export function Hex(): ReactElement<any, any> {
   const DEFAULT_HEX = '#4C4F56';
 
-  const [inputValue, setInputValue] = useState<string>(DEFAULT_HEX);
-  const [lastValidInput, setLastValidInput] = useState<string>(DEFAULT_HEX);
-  const [colourInfo, setColourInfo] = useState<IColourInfo>({
-    hex: DEFAULT_HEX,
-    rgb: 'rgb(76, 79, 86)',
-    name: 'Abbey',
-  });
+  const param = useParams<{ hex: string }>();
+  const hex = cleanHex(param.hex ?? DEFAULT_HEX);
 
-  const handleColourInfo = async (inputValue: string) => {
-    try {
-      const response = await invoke<IColourInfo>('convert_hex_string', {
-        hex: inputValue
-      });
+  const [inputValue, setInputValue] = useState<string>(hex);
+  const [lastValidInput, setLastValidInput] = useState<string>(hex);
+  const [colourInfo, setColourInfo] = useState<IColourInfo>(new ColourInfo(
+    '#4C4F56',
+    'rgb(76, 79, 86)',
+    'Abbey',
+  ));
 
-      if (response) {
+  useEffect(() => {
+    convertHexToColour(inputValue).then((colour) => {
+      if (colour) {
         setLastValidInput(inputValue);
-        setColourInfo(response);
+        setColourInfo(colour);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  }
+    });
+  }, [inputValue]);
 
   return (
     <div id="Hex_container">
@@ -40,16 +55,7 @@ export function Hex(): ReactElement<any, any> {
             pattern="^[#]([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
             value={inputValue}
             onChange={(event) => {
-              // Get the current value from the input.
-              let currentValue = event.target.value;
-              // Replace any non-hex values from the string.
-              let cleanedValue = currentValue.replaceAll(/[^0-9a-fA-F]/g, '');
-              // Don't let the string be longer than 6 characters after cleaned.
-              let maxLengthValue = cleanedValue.substring(0, 6);
-              // Add the octothorpe to the start of the string.
-              let hexValue = `#${maxLengthValue}`;
-              handleColourInfo(hexValue);
-              setInputValue(hexValue);
+              setInputValue(cleanHex(event.target.value));
             }}
             onBlur={(event) => {
               setInputValue(lastValidInput);
