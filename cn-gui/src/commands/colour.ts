@@ -19,9 +19,7 @@ export async function convertNameToColour(name: string): Promise<IColourInfo> {
 
 export async function convertRgbToColour(r: number, g: number, b: number): Promise<IColourInfo> {
   try {
-    return await invoke<IColourInfo>('convert_rgb_string', {
-      r, g, b
-    });
+    return await invoke<IColourInfo>('convert_rgb_string', { r, g, b });
   } catch (err) {
     throw new Error('Unhandled exception converting rgb.');
   }
