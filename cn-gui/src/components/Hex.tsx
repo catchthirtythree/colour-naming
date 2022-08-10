@@ -26,7 +26,7 @@ export function Hex(props: {
 
   useEffect(() => {
     setInputValue(props.colour.hex);
-  }, [props.colour]);
+  }, [props]);
 
   return (
     <div id="Hex_container">

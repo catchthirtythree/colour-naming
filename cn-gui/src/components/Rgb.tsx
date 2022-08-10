@@ -48,7 +48,7 @@ export function Rgb(props: {
         props.onSetColour(colour);
       }
     })
-  }, [colourRed, colourGreen, colourBlue]);
+  }, [props, colourRed, colourGreen, colourBlue]);
 
   return (
     <div id="Rgb_container">

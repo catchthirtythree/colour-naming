@@ -5,7 +5,7 @@ export async function convertHexToColour(hex: string): Promise<IColourInfo> {
   try {
     return await invoke<IColourInfo>('convert_hex_string', { hex });
   } catch (err) {
-    throw "Unhandled exception converting hex.";
+    throw new Error('Unhandled exception converting hex.');
   }
 }
 
@@ -13,7 +13,7 @@ export async function convertNameToColour(name: string): Promise<IColourInfo> {
   try {
     return await invoke<IColourInfo>('convert_name_string', { name });
   } catch (err) {
-    throw "Unhandled exception converting name.";
+    throw new Error('Unhandled exception converting name.');
   }
 }
 
@@ -23,6 +23,6 @@ export async function convertRgbToColour(r: number, g: number, b: number): Promi
       r, g, b
     });
   } catch (err) {
-    throw "Unhandled exception converting rgb.";
+    throw new Error('Unhandled exception converting rgb.');
   }
 }

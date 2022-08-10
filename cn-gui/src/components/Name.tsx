@@ -1,5 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { ReactElement } from 'react';
 
 import './Name.css';
 import { IColourInfo } from '../types/colour-info';
