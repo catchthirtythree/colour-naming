@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 
 import './Name.css';
 import { IColourInfo } from '../types/colour-info';
@@ -15,7 +15,15 @@ export function Name(props: {
   onSetColour: (colour: IColourInfo) => void,
 }): ReactElement<any, any> {
   const colourPairs = sortArray(ALL_PAIRS, sortPairs);
-  const index = colourPairs.findIndex(pair => pair.name === props.colour.name);
+  const colourPair = colourPairs.findIndex(pair => pair.name === props.colour.name);
+  const [colourIndex, setColourIndex] = useState<number>(colourPair);
+
+  useEffect(() => {
+    const colourPairs = sortArray(ALL_PAIRS, sortPairs);
+    const index = colourPairs.findIndex(pair => pair.name === props.colour.name);
+
+    setColourIndex(index);
+  }, [props]);
 
   return (
     <div id="Name_container">
@@ -25,17 +33,19 @@ export function Name(props: {
         <div id="input">
           <select
             id="colour-selector"
-            value={index}
+            value={colourIndex}
             onChange={(event) => {
               let currentValue = event.target.value;
               let index = Number(currentValue);
               let pair = colourPairs[index];
 
+              setColourIndex(index);
+
               convertNameToColour(pair.name).then(colour => {
                 if (colour) {
                   props.onSetColour(colour);
                 }
-              })
+              });
             }}
           >
             {

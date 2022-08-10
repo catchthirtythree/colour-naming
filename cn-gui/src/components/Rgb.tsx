@@ -37,18 +37,12 @@ export function Rgb(props: {
   const [colourBlue, setColourBlue] = useState<string>(b.toString());
 
   useEffect(() => {
-    const [r, g, b] = [
-      clamp(Number(colourRed), 0, 255),
-      clamp(Number(colourGreen), 0, 255),
-      clamp(Number(colourBlue), 0, 255),
-    ];
+    const [r, g, b] = parseRGB(props.colour.rgb);
 
-    convertRgbToColour(r, g, b).then(colour => {
-      if (colour) {
-        props.onSetColour(colour);
-      }
-    })
-  }, [props, colourRed, colourGreen, colourBlue]);
+    setColourRed(r.toString());
+    setColourGreen(g.toString());
+    setColourBlue(b.toString());
+  }, [props]);
 
   return (
     <div id="Rgb_container">
@@ -64,7 +58,21 @@ export function Rgb(props: {
               max={255}
               value={colourRed}
               onChange={(event) => {
-                setColourRed(convertColour(event.target.value));
+                let converted = convertColour(event.target.value);
+
+                setColourRed(converted);
+
+                const [r, g, b] = [
+                  clamp(Number(converted), 0, 255),
+                  clamp(Number(colourGreen), 0, 255),
+                  clamp(Number(colourBlue), 0, 255),
+                ];
+
+                convertRgbToColour(r, g, b).then(colour => {
+                  if (colour) {
+                    props.onSetColour(colour);
+                  }
+                });
               }}
             />
           </div>
@@ -77,7 +85,21 @@ export function Rgb(props: {
               max={255}
               value={colourGreen}
               onChange={(event) => {
-                setColourGreen(convertColour(event.target.value));
+                let converted = convertColour(event.target.value);
+
+                setColourGreen(converted);
+
+                const [r, g, b] = [
+                  clamp(Number(colourRed), 0, 255),
+                  clamp(Number(converted), 0, 255),
+                  clamp(Number(colourBlue), 0, 255),
+                ];
+
+                convertRgbToColour(r, g, b).then(colour => {
+                  if (colour) {
+                    props.onSetColour(colour);
+                  }
+                });
               }}
             />
           </div>
@@ -90,7 +112,21 @@ export function Rgb(props: {
               max={255}
               value={colourBlue}
               onChange={(event) => {
-                setColourBlue(convertColour(event.target.value));
+                let converted = convertColour(event.target.value);
+
+                setColourBlue(converted);
+
+                const [r, g, b] = [
+                  clamp(Number(colourRed), 0, 255),
+                  clamp(Number(colourGreen), 0, 255),
+                  clamp(Number(converted), 0, 255),
+                ];
+
+                convertRgbToColour(r, g, b).then(colour => {
+                  if (colour) {
+                    props.onSetColour(colour);
+                  }
+                });
               }}
             />
           </div>

@@ -20,17 +20,6 @@ export class App extends React.Component<any, any> {
     };
   }
 
-  // componentDidMount() {
-  //   const random = Math.round(Math.random() * ALL_PAIRS.length);
-  //   const randomColour = ALL_PAIRS[random];
-
-  //   convertNameToColour(randomColour.name).then(colour => {
-  //     if (colour) {
-  //       this.setState({ colour })
-  //     }
-  //   })
-  // }
-
   render() {
     return (
       <div id="App_container">

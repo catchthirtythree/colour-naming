@@ -13,10 +13,6 @@ export function cleanHex(str: string): string {
   return `#${maxLengthValue}`;
 }
 
-// @TODO(michael): This should update when Rgb or Name change.
-// It doesn't.
-// It works when the inputValue changes though.
-
 export function Hex(props: {
   colour: IColourInfo,
   onSetColour: (colour: IColourInfo) => void,
@@ -26,6 +22,7 @@ export function Hex(props: {
 
   useEffect(() => {
     setInputValue(props.colour.hex);
+    setLastValidInput(props.colour.hex);
   }, [props]);
 
   return (
@@ -41,6 +38,7 @@ export function Hex(props: {
             maxLength={7}
             onChange={(event) => {
               setInputValue(event.target.value);
+
               convertHexToColour(event.target.value).then((colour) => {
                 if (colour) {
                   setLastValidInput(event.target.value);
@@ -49,9 +47,11 @@ export function Hex(props: {
               });
             }}
             onBlur={(event) => {
+              setInputValue(lastValidInput);
+
               convertHexToColour(lastValidInput).then((colour) => {
                 if (colour) {
-                  setInputValue(lastValidInput);
+                  setLastValidInput(lastValidInput);
                   props.onSetColour(colour);
                 }
               });
