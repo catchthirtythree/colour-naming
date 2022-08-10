@@ -1,10 +1,8 @@
-import { Component, ReactElement, useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { ReactElement, useEffect, useState } from 'react';
 
 import './Hex.css';
-import { ColourInfo, IColourInfo } from '../types/colour-info';
-import { Info } from './Info';
-import { useParams } from 'react-router-dom';
+import { IColourInfo } from '../types/colour-info';
+import { convertHexToColour } from '../commands/colour';
 
 export function cleanHex(str: string): string {
   // Replace any non-hex values from the string.
@@ -15,61 +13,53 @@ export function cleanHex(str: string): string {
   return `#${maxLengthValue}`;
 }
 
-export async function convertHexToColour(hex: string): Promise<IColourInfo> {
-  try {
-    return await invoke<IColourInfo>('convert_hex_string', { hex });
-  } catch (err) {
-    throw "Unhandled exception converting hex.";
-  }
-}
+// @TODO(michael): This should update when Rgb or Name change.
+// It doesn't.
+// It works when the inputValue changes though.
 
-export function Hex(): ReactElement<any, any> {
-  const DEFAULT_HEX = '#4C4F56';
-
-  const param = useParams<{ hex: string }>();
-  const hex = cleanHex(param.hex ?? DEFAULT_HEX);
-
-  const [inputValue, setInputValue] = useState<string>(hex);
-  const [lastValidInput, setLastValidInput] = useState<string>(hex);
-  const [colourInfo, setColourInfo] = useState<IColourInfo>(new ColourInfo(
-    '#4C4F56',
-    'rgb(76, 79, 86)',
-    'Abbey',
-  ));
+export function Hex(props: {
+  colour: IColourInfo,
+  onSetColour: (colour: IColourInfo) => void,
+}): ReactElement<any, any> {
+  const [inputValue, setInputValue] = useState<string>(props.colour.hex);
+  const [lastValidInput, setLastValidInput] = useState<string>(props.colour.hex);
 
   useEffect(() => {
-    convertHexToColour(inputValue).then((colour) => {
-      if (colour) {
-        setLastValidInput(inputValue);
-        setColourInfo(colour);
-      }
-    });
-  }, [inputValue]);
+    setInputValue(props.colour.hex);
+  }, [props.colour]);
 
   return (
     <div id="Hex_container">
       <div id="input-container">
+        <span>Your Hex:</span>
+
         <div id="input">
           <input
-            style={{ color: colourInfo ? colourInfo.hex : 'black' }}
+            style={{ color: props.colour.hex }}
             pattern="^[#]([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
             value={inputValue}
+            maxLength={7}
             onChange={(event) => {
-              setInputValue(cleanHex(event.target.value));
+              setInputValue(event.target.value);
+              convertHexToColour(event.target.value).then((colour) => {
+                if (colour) {
+                  setLastValidInput(event.target.value);
+                  props.onSetColour(colour);
+                }
+              });
             }}
             onBlur={(event) => {
-              setInputValue(lastValidInput);
+              convertHexToColour(lastValidInput).then((colour) => {
+                if (colour) {
+                  setInputValue(lastValidInput);
+                  props.onSetColour(colour);
+                }
+              });
             }}
           />
           <span id="shadow">{inputValue}</span>
         </div>
       </div>
-
-      <div id="arrow-container">
-        <span>--&gt;</span>
-      </div>
-
-      <Info colour={colourInfo} />
     </div>
   );
 }

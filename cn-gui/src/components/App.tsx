@@ -1,63 +1,105 @@
-import { ReactElement, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-} from "react-router-dom";
+import React from "react";
+import { ColourInfo, IColourInfo } from "../types/colour-info";
 
 import "./App.css";
 import { Hex } from "./Hex";
+import { Info } from "./Info";
 import { Name } from "./Name";
 import { Rgb } from "./Rgb";
 
-export function App(): ReactElement<any, any> {
-  return (
-    <div id="App_container">
-      <div id="header">
-        Name that Colour
-      </div>
+export class App extends React.Component<any, any> {
+  constructor(props: {}) {
+    super(props);
 
-      <div id="content">
-        <div id="routing">
-          <div
-            className="route"
-            data-selected={ window.location.pathname === '/' || window.location.pathname === '/hex' }
-            onClick={(event) => {
-              window.location.href = '/hex';
-            }}>
-            Convert Hex
-          </div>
+    this.state = {
+      colour: new ColourInfo(
+        '#4C4F56',
+        'rgb(76, 79, 86)',
+        'Abbey',
+      )
+    };
+  }
 
-          <div
-            className="route"
-            data-selected={ window.location.pathname === '/rgb' }
-            onClick={(event) => {
-              window.location.href = '/rgb';
-            }}>
-            Convert Rgb
-          </div>
+  // componentDidMount() {
+  //   const random = Math.round(Math.random() * ALL_PAIRS.length);
+  //   const randomColour = ALL_PAIRS[random];
 
-          <div
-            className="route"
-            data-selected={ window.location.pathname === '/name' }
-            onClick={(event) => {
-              window.location.href = '/name';
-            }}>
-            Convert Name
-          </div>
+  //   convertNameToColour(randomColour.name).then(colour => {
+  //     if (colour) {
+  //       this.setState({ colour })
+  //     }
+  //   })
+  // }
+
+  render() {
+    return (
+      <div id="App_container">
+        <div id="header">
+          Name that Colour
         </div>
 
-        <Router>
-          <Routes>
-            <Route path="/" element={<Hex />} />
-            <Route path="/hex" element={<Hex />} />
-            {/* @NOTE(michael): Tauri doesn't have an address bar otherwise this would work. */}
-            <Route path="/hex/:hex" element={<Hex />} />
-            <Route path="/rgb" element={<Rgb />} />
-            <Route path="/name" element={<Name />} />
-          </Routes>
-        </Router>
+        <div id="content">
+          <div id="inputs">
+            <Hex
+              colour={this.state.colour}
+              onSetColour={(colour: IColourInfo) => this.setState({ colour })}
+            />
+            <Rgb
+              colour={this.state.colour}
+              onSetColour={(colour: IColourInfo) => this.setState({ colour })}
+            />
+            <Name
+              colour={this.state.colour}
+              onSetColour={(colour: IColourInfo) => this.setState({ colour })}
+            />
+          </div>
+
+          <div id="result">
+            <span id="text">Result:</span>
+            <Info colour={this.state.colour} />
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
+
+// export function App(): ReactElement<any, any> {
+//   const [colourInfo, setColourInfo] = useState<IColourInfo>(new ColourInfo(
+//     '#4C4F56',
+//     'rgb(76, 79, 86)',
+//     'Abbey',
+//   ));
+
+//   useEffect(() => {
+//     const random = Math.round(Math.random() * ALL_PAIRS.length);
+//     const randomColour = ALL_PAIRS[random];
+
+//     convertNameToColour(randomColour.name).then(colour => {
+//       if (colour) {
+//         setColourInfo(colour);
+//       }
+//     })
+//   }, []);
+
+//   return (
+//     <div id="App_container">
+//       <div id="header">
+//         Name that Colour
+//       </div>
+
+//       <div id="content">
+//         <div id="inputs">
+//           <Hex colour={colourInfo} colourCallback={setColourInfo} />
+//           <Rgb colour={colourInfo} colourCallback={setColourInfo} />
+//           <Name colour={colourInfo} colourCallback={setColourInfo} />
+//         </div>
+
+//         <div id="result">
+//           <span id="text">Result:</span>
+//           <Info colour={colourInfo} />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

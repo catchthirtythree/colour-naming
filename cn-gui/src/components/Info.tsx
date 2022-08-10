@@ -1,8 +1,9 @@
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement } from 'react';
+import { IColourInfo } from '../types/colour-info';
 
 import './Info.css';
 
-export function Info(props: any): ReactElement<any, any> {
+export function Info(props: { colour: IColourInfo }): ReactElement<any, any> {
   return (
     <div id="Info_container">
       <div id="colour-container">

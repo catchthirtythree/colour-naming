@@ -4,77 +4,60 @@ import { invoke } from '@tauri-apps/api/tauri';
 import './Name.css';
 import { IColourInfo } from '../types/colour-info';
 import { ALL_PAIRS, IColourPair } from '../types/colour-pair';
-import { Info } from './Info';
 import { sortArray } from '../utils/sort';
+import { convertNameToColour } from '../commands/colour';
 
-export async function convertNameToColour(name: string): Promise<IColourInfo> {
-  try {
-    return await invoke<IColourInfo>('convert_name_string', { name });
-  } catch (err) {
-    throw "Unhandled exception converting name.";
-  }
+export function sortPairs(item1: IColourPair, item2: IColourPair): number {
+  return item1.name.localeCompare(item2.name);
 }
 
-export function Name(): ReactElement<any, any> {
-  // @TODO(michael): Set default colour similarly to Hex/Rgb.
-
-  const [colourPairs] = useState<IColourPair[]>(
-    sortArray(ALL_PAIRS, (item1: IColourPair, item2: IColourPair) => {
-      return item1.name.localeCompare(item2.name);
-    })
-  );
-
-  const [colourName, setColourName] = useState<string>('Abbey');
-  const [colourInfo, setColourInfo] = useState<IColourInfo>({
-    hex: '#4C4F56',
-    rgb: 'rgb(76, 79, 86)',
-    name: 'Abbey',
-  });
-
-  useEffect(() => {
-    convertNameToColour(colourName).then(colour => {
-      if (colour) {
-        setColourInfo(colour);
-      }
-    })
-  }, [colourName]);
-
+export function Name(props: {
+  colour: IColourInfo,
+  onSetColour: (colour: IColourInfo) => void,
+}): ReactElement<any, any> {
+  const colourPairs = sortArray(ALL_PAIRS, sortPairs);
+  const index = colourPairs.findIndex(pair => pair.name === props.colour.name);
 
   return (
     <div id="Name_container">
       <div id="input-container">
-        <select id="colour-selector"
-          onChange={(event) => {
-            let currentValue = event.target.value;
-            let index = Number(currentValue);
-            let pair = colourPairs[index];
-            setColourName(pair.name);
-          }}
-        >
-          {
-            colourPairs.map((pair, index) => {
-              return (
-                <option
-                  key={index}
-                  value={index}
-                  style={{
-                    backgroundColor: pair.toStringHex(),
-                    color: pair.isColourLight() ? 'black' : 'white',
-                    mixBlendMode: 'lighten',
-                  }}>
-                  {pair.name}
-                </option>
-              );
-            })
-          }
-        </select>
-      </div>
+        <span id="text">Your Name:</span>
 
-      <div id="arrow-container">
-        <span>--&gt;</span>
-      </div>
+        <div id="input">
+          <select
+            id="colour-selector"
+            value={index}
+            onChange={(event) => {
+              let currentValue = event.target.value;
+              let index = Number(currentValue);
+              let pair = colourPairs[index];
 
-      <Info colour={colourInfo} />
+              convertNameToColour(pair.name).then(colour => {
+                if (colour) {
+                  props.onSetColour(colour);
+                }
+              })
+            }}
+          >
+            {
+              colourPairs.map((pair, index) => {
+                return (
+                  <option
+                    key={index}
+                    value={index}
+                    style={{
+                      backgroundColor: pair.toStringHex(),
+                      color: pair.isColourLight() ? 'black' : 'white',
+                      mixBlendMode: 'lighten',
+                    }}>
+                    {pair.name}
+                  </option>
+                );
+              })
+            }
+          </select>
+        </div>
+      </div>
     </div>
   );
 }

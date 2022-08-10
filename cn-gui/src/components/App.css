@@ -12,52 +12,38 @@ div#App_container div#header {
 }
 
 div#App_container div#content {
-  margin: 8px;
-  margin-top: 16px;
-}
-
-div#App_container div#content div#routing {
   display: flex;
-  flex-direction: row;
-}
-
-div#App_container div#content div#routing div.route {
-  flex: 1;
+  flex-direction: column;
+  align-items: center;
 
   border: 1px solid black;
-  cursor: pointer;
-  padding: 5px;
-  text-align: center;
+  margin-top: 16px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  width: 908px;
 }
 
-div#App_container div#content div#routing div.route[data-selected="true"]:nth-child(1) {
-  background-color: #dc143c;
+div#App_container div#content div#inputs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 40px;
+  width: 100%;
 }
 
-div#App_container div#content div#routing div.route[data-selected="true"]:nth-child(2) {
-  background-color: #228b22;
+div#App_container div#content div#inputs > * {
+  width: 300px;
 }
 
-div#App_container div#content div#routing div.route[data-selected="true"]:nth-child(3) {
-  background-color: #0000ff;
+div#App_container div#content div#result {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
 }
 
-div#App_container div#content div#routing div.route:nth-child(1):hover {
-  background-color: #dc143ca0;
-}
-
-div#App_container div#content div#routing div.route:nth-child(2):hover {
-  background-color: #228b22a0;
-}
-
-div#App_container div#content div#routing div.route:nth-child(3):hover {
-  background-color: #0000ffa0;
-}
-
-div#App_container div#content div#routing div.route:first-child {
-  border-top-left-radius: 5px;
-}
-
-div#App_container div#content div#routing div.route:last-child {
-  border-top-right-radius: 5px;
+div#App_container div#content div#result span#text {
+  margin-right: 25px;
 }

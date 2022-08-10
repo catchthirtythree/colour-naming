@@ -1,6 +1,6 @@
 div#Info_container div#colour-container {
   display: grid;
-  grid-template-columns: 60px 300px;
+  grid-template-columns: 60px auto;
 
   font-family: 'JetBrains Mono Regular';
   font-size: 18px;
