@@ -22,7 +22,6 @@ export function Hex(props: {
 
   useEffect(() => {
     setInputValue(props.colour.hex);
-    setLastValidInput(props.colour.hex);
   }, [props]);
 
   return (
@@ -37,24 +36,19 @@ export function Hex(props: {
             value={inputValue}
             maxLength={7}
             onChange={(event) => {
-              setInputValue(event.target.value);
+              const cleaned = cleanHex(event.target.value);
 
-              convertHexToColour(event.target.value).then((colour) => {
+              setInputValue(cleaned);
+
+              convertHexToColour(cleaned).then((colour) => {
                 if (colour) {
-                  setLastValidInput(event.target.value);
+                  setLastValidInput(cleaned);
                   props.onSetColour(colour);
                 }
               });
             }}
             onBlur={(event) => {
               setInputValue(lastValidInput);
-
-              convertHexToColour(lastValidInput).then((colour) => {
-                if (colour) {
-                  setLastValidInput(lastValidInput);
-                  props.onSetColour(colour);
-                }
-              });
             }}
           />
           <span id="shadow">{inputValue}</span>
