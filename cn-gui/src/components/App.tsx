@@ -20,7 +20,7 @@ export class App extends React.Component<any, any> {
         'rgb(76, 79, 86)',
         'Abbey',
       ),
-    page: Page.ConvertColour,
+      page: Page.ConvertColour,
     };
   }
 
