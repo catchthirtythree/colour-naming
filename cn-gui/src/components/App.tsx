@@ -28,7 +28,7 @@ export class App extends React.Component<any, any> {
     return (
       <div id="App_container">
         <div id="header">
-          Name that Colour
+          Colour Naming
         </div>
 
         <div id="content">
