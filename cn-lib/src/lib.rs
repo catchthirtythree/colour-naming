@@ -128,13 +128,6 @@ impl ColourNaming {
         [h, s, l]
     }
 
-    pub fn to_rgb_bytes(num: u32) -> Rgb {
-        let b1 = num >> 16;
-        let b2 = num >> 8;
-        let b3 = num;
-        return [b1 as u8, b2 as u8, b3 as u8];
-    }
-
     pub fn to_hex_value_from_rgb_bytes(bytes: Rgb) -> u32 {
         let mut sum: u32 = 0;
         for (i, byte) in bytes.iter().enumerate() {
@@ -157,8 +150,8 @@ impl ColourNaming {
         let mut colour: HexColourPair = COLOUR_PAIRS[0];
 
         for pair in COLOUR_PAIRS {
-            let [pr, pg, pb] = Self::to_rgb_bytes(pair.0);
-            let [ph, ps, pl] = Self::to_hsl_ratios_from_rgb_bytes(Self::to_rgb_bytes(pair.0));
+            let [pr, pg, pb] = Self::to_rgb_bytes_from_hex_value(pair.0);
+            let [ph, ps, pl] = Self::to_hsl_ratios_from_rgb_bytes(Self::to_rgb_bytes_from_hex_value(pair.0));
 
             // Not entirely sure why this conversion is done, but we have to do it
             // if we want to get the same name as name-that-color.
@@ -204,7 +197,7 @@ impl ColourNaming {
 
     pub fn to_hex_value_from_hex_string(s: &str) -> Result<u32, ParseError> {
         let s = s.to_ascii_lowercase();
-        let re = match regex::Regex::new("^((#)?(([a-z0-9]{8})|([a-z0-9]{6})|([a-z0-9]{3})))$") {
+        let re = match regex::Regex::new("^((#)?(([a-z0-9]{8})|([a-z0-9]{1,6})))$") {
             Ok(re) => re,
             Err(_) => return Err(ParseError::InvalidRegex)
         };
@@ -213,8 +206,8 @@ impl ColourNaming {
             None => return Err(ParseError::InvalidCapture)
         };
 
-        match (captures.get(4), captures.get(5), captures.get(6)) {
-            (Some(hex), _, _) => {
+        match (captures.get(4), captures.get(5)) {
+            (Some(hex), _) => {
                 let hex = hex.as_str();
                 match u32::from_str_radix(hex, 16) {
                     Ok(hex) => Ok(hex >> 8),
@@ -222,18 +215,9 @@ impl ColourNaming {
                 }
             },
 
-            (_, Some(hex), _) => {
+            (_, Some(hex)) => {
                 let hex = hex.as_str();
                 match u32::from_str_radix(hex, 16) {
-                    Ok(hex) => Ok(hex),
-                    Err(_) => return Err(ParseError::InvalidNumber)
-                }
-            },
-
-            (_, _, Some(hex)) => {
-                let hex = hex.as_str();
-                let hex = hex.chars().map(|ch| format!("{}{}", ch, ch)).collect::<String>();
-                match u32::from_str_radix(&hex, 16) {
                     Ok(hex) => Ok(hex),
                     Err(_) => return Err(ParseError::InvalidNumber)
                 }
@@ -244,9 +228,9 @@ impl ColourNaming {
     }
 
     pub fn to_rgb_bytes_from_hex_value(value: u32) -> Rgb {
-        let r = (value >> 16 & 0xff) as u8;
-        let g = (value >>  8 & 0xff) as u8;
-        let b = (value & 0xff) as u8;
+        let r = ((value >> (8 * 2)) & 0xff) as u8;
+        let g = ((value >> (8 * 1)) & 0xff) as u8;
+        let b = ((value >> (8 * 0)) & 0xff) as u8;
         [r, g, b]
     }
 }
@@ -258,97 +242,90 @@ mod tests {
     #[test]
     fn test_to_bytes() {
         let number = 0xf4e9d3;
-        let to_bytes = to_rgb_bytes(number);
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
         assert_eq!(to_bytes, [0xf4, 0xe9, 0xd3]);
     }
 
     #[test]
     fn test_from_bytes() {
         let number = 0xf4e9d3;
-        let to_bytes = to_rgb_bytes(number);
-        let from_bytes = from_rgb_bytes(to_bytes);
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
+        let from_bytes = ColourNaming::to_hex_value_from_rgb_bytes(to_bytes);
         assert_eq!(from_bytes, number);
     }
 
     #[test]
     fn test_from_str_from_hex() {
         let number = 0xf4e9d3;
-        let to_bytes = to_rgb_bytes(number);
-        let from_bytes = from_rgb_bytes(to_bytes);
-        let s = "f4e9d3";
-        let from_str = to_rgb_bytes_from_hex_string(s).ok();
-        assert_eq!(from_str, Some(from_bytes));
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
+        let from_bytes = ColourNaming::to_hex_value_from_rgb_bytes(to_bytes);
+        let s = "#f4e9d3";
+        let from_str = ColourNaming::to_hex_value_from_hex_string(s).unwrap();
+        assert_eq!(from_str, from_bytes);
     }
 
     #[test]
     fn test_from_str_from_shortened_hex() {
-        let number = 0xff33ff;
-        let to_bytes = to_rgb_bytes(number);
-        let from_bytes = from_rgb_bytes(to_bytes);
-        let s = "f3f";
-        let from_str = to_rgb_bytes_from_hex_string(s).ok();
-        assert_eq!(from_str, Some(from_bytes));
-    }
-
-    #[test]
-    fn test_from_str_from_invalid_shortened_hex() {
-        let s = "ff3f";
-        let from_str = to_rgb_bytes_from_hex_string(s).err();
-        assert_eq!(from_str, Some(ParseError::InvalidCapture));
+        let number = 0xf3f;
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
+        let from_bytes = ColourNaming::to_hex_value_from_rgb_bytes(to_bytes);
+        let s = "#f3f";
+        let from_str = ColourNaming::to_hex_value_from_hex_string(s).unwrap();
+        assert_eq!(from_str, from_bytes);
     }
 
     #[test]
     fn test_from_str_multiple_cases() {
-        assert_eq!(to_rgb_bytes_from_hex_string("").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("f").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("f1").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f1").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("f13").ok(), Some(16716083));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f13").ok(), Some(16716083));
-        assert_eq!(to_rgb_bytes_from_hex_string("f135").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f135").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("f1356").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f1356").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("f13bca").ok(), Some(15809482));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f13bca").ok(), Some(15809482));
-        assert_eq!(to_rgb_bytes_from_hex_string("f13bcaf").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f13bcaf").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("f13bcaff").ok(), Some(15809482));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f13bcaff").ok(), Some(15809482));
-        assert_eq!(to_rgb_bytes_from_hex_string("f13bcafff").err(), Some(ParseError::InvalidCapture));
-        assert_eq!(to_rgb_bytes_from_hex_string("#f13bcafff").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f").ok(), Some(15));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f").ok(), Some(15));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f1").ok(), Some(241));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f1").ok(), Some(241));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f13").ok(), Some(3859));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f13").ok(), Some(3859));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f135").ok(), Some(61749));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f135").ok(), Some(61749));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f1356").ok(), Some(987990));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f1356").ok(), Some(987990));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f13bca").ok(), Some(15809482));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f13bca").ok(), Some(15809482));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f13bcaf").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f13bcaf").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f13bcaff").ok(), Some(15809482));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f13bcaff").ok(), Some(15809482));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("f13bcafff").err(), Some(ParseError::InvalidCapture));
+        assert_eq!(ColourNaming::to_hex_value_from_hex_string("#f13bcafff").err(), Some(ParseError::InvalidCapture));
     }
 
     #[test]
     fn test_from_str_from_hex_with_hash() {
         let number = 0xf4e9d3;
-        let to_bytes = to_rgb_bytes(number);
-        let from_bytes = from_rgb_bytes(to_bytes);
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
+        let from_bytes = ColourNaming::to_hex_value_from_rgb_bytes(to_bytes);
         let s = "#f4e9d3";
-        let from_str = to_rgb_bytes_from_hex_string(s).ok();
-        assert_eq!(from_str, Some(from_bytes));
+        let from_str = ColourNaming::to_hex_value_from_hex_string(s).unwrap();
+        assert_eq!(from_str, from_bytes);
     }
 
     #[test]
     fn test_from_str_from_hex_with_alpha() {
         let number = 0xf4e9d3;
-        let to_bytes = to_rgb_bytes(number);
-        let from_bytes = from_rgb_bytes(to_bytes);
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
+        let from_bytes = ColourNaming::to_hex_value_from_rgb_bytes(to_bytes);
         let s = "f4e9d333";
-        let from_str = to_rgb_bytes_from_hex_string(s).ok();
-        assert_eq!(from_str, Some(from_bytes));
+        let from_str = ColourNaming::to_hex_value_from_hex_string(s).unwrap();
+        assert_eq!(from_str, from_bytes);
     }
 
     #[test]
     fn test_from_str_from_hex_with_hash_and_alpha() {
         let number = 0xf4e9d3;
-        let to_bytes = to_rgb_bytes(number);
-        let from_bytes = from_rgb_bytes(to_bytes);
+        let to_bytes = ColourNaming::to_rgb_bytes_from_hex_value(number);
+        let from_bytes = ColourNaming::to_hex_value_from_rgb_bytes(to_bytes);
         let s = "#f4e9d333";
-        let from_str = to_rgb_bytes_from_hex_string(s).ok();
-        assert_eq!(from_str, Some(from_bytes));
+        let from_str = ColourNaming::to_hex_value_from_hex_string(s).unwrap();
+        assert_eq!(from_str, from_bytes);
     }
 }
 
