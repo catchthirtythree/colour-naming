@@ -20,7 +20,6 @@ export function Hex(props: {
   const changed = useRef<number>(0);
 
   const [inputValue, setInputValue] = useState<string>(props.colour.hex);
-  const [lastValidInput, setLastValidInput] = useState<string>(props.colour.hex);
 
   useEffect(() => {
     if (changed.current > 0) {
@@ -50,7 +49,6 @@ export function Hex(props: {
 
               convertHexToColour(cleaned).then((colour) => {
                 if (colour) {
-                  setLastValidInput(cleaned);
                   props.onSetColour(colour);
                 }
               });
