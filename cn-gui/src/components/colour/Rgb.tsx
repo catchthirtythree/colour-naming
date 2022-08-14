@@ -1,9 +1,9 @@
 import { ReactElement, useEffect, useState } from 'react';
 
 import './Rgb.css';
-import { IColourInfo } from '../types/colour-info';
-import { clamp } from '../utils/clamp';
-import { convertRgbToColour } from '../commands/colour';
+import { IColourInfo } from '../../types/colour-info';
+import { clamp } from '../../utils/clamp';
+import { convertRgbToColour } from '../../commands/colour';
 
 export function convertColour(input: string): string {
   if (!input.trim()) {

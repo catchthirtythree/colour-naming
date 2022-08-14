@@ -1,8 +1,8 @@
 import { ReactElement, useEffect, useState } from 'react';
 
 import './Hex.css';
-import { IColourInfo } from '../types/colour-info';
-import { convertHexToColour } from '../commands/colour';
+import { IColourInfo } from '../../types/colour-info';
+import { convertHexToColour } from '../../commands/colour';
 
 export function cleanHex(str: string): string {
   // Replace any non-hex values from the string.

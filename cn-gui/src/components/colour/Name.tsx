@@ -1,10 +1,10 @@
 import { ReactElement, useEffect, useState } from 'react';
 
 import './Name.css';
-import { IColourInfo } from '../types/colour-info';
-import { ALL_PAIRS, IColourPair } from '../types/colour-pair';
-import { sortArray } from '../utils/sort';
-import { convertNameToColour } from '../commands/colour';
+import { IColourInfo } from '../../types/colour-info';
+import { ALL_PAIRS, IColourPair } from '../../types/colour-pair';
+import { sortArray } from '../../utils/sort';
+import { convertNameToColour } from '../../commands/colour';
 
 export function sortPairs(item1: IColourPair, item2: IColourPair): number {
   return item1.name.localeCompare(item2.name);

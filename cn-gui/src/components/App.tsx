@@ -1,11 +1,14 @@
 import React from "react";
-import { ColourInfo, IColourInfo } from "../types/colour-info";
+import { ColourInfo } from "../types/colour-info";
 
 import "./App.css";
-import { Hex } from "./Hex";
-import { Info } from "./Info";
-import { Name } from "./Name";
-import { Rgb } from "./Rgb";
+import { ConvertColour } from "./colour/ConvertColour";
+import { ConvertPixel } from "./pixel/ConvertPixel";
+
+export enum Page {
+  ConvertColour,
+  ConvertPixel,
+}
 
 export class App extends React.Component<any, any> {
   constructor(props: {}) {
@@ -16,7 +19,8 @@ export class App extends React.Component<any, any> {
         '#4C4F56',
         'rgb(76, 79, 86)',
         'Abbey',
-      )
+      ),
+      page: Page.ConvertPixel,
     };
   }
 
@@ -28,67 +32,30 @@ export class App extends React.Component<any, any> {
         </div>
 
         <div id="content">
-          <div id="inputs">
-            <Hex
-              colour={this.state.colour}
-              onSetColour={(colour: IColourInfo) => this.setState({ colour })}
-            />
-            <Rgb
-              colour={this.state.colour}
-              onSetColour={(colour: IColourInfo) => this.setState({ colour })}
-            />
-            <Name
-              colour={this.state.colour}
-              onSetColour={(colour: IColourInfo) => this.setState({ colour })}
-            />
+          <div id="navigation">
+            <div
+              className="button"
+              aria-selected={this.state.page === Page.ConvertColour}
+              onClick={(event) => this.setState({ page: Page.ConvertColour })}
+            >
+              Convert Colour
+            </div>
+
+            <div
+              className="button"
+              aria-selected={this.state.page === Page.ConvertPixel}
+              onClick={(event) => this.setState({ page: Page.ConvertPixel })}
+            >
+              Convert Pixel
+            </div>
           </div>
 
-          <div id="result">
-            <span id="text">Result:</span>
-            <Info colour={this.state.colour} />
+          <div id="page">
+            {this.state.page === Page.ConvertColour && <ConvertColour />}
+            {this.state.page === Page.ConvertPixel && <ConvertPixel />}
           </div>
         </div>
       </div>
     );
   }
 }
-
-// export function App(): ReactElement<any, any> {
-//   const [colourInfo, setColourInfo] = useState<IColourInfo>(new ColourInfo(
-//     '#4C4F56',
-//     'rgb(76, 79, 86)',
-//     'Abbey',
-//   ));
-
-//   useEffect(() => {
-//     const random = Math.round(Math.random() * ALL_PAIRS.length);
-//     const randomColour = ALL_PAIRS[random];
-
-//     convertNameToColour(randomColour.name).then(colour => {
-//       if (colour) {
-//         setColourInfo(colour);
-//       }
-//     })
-//   }, []);
-
-//   return (
-//     <div id="App_container">
-//       <div id="header">
-//         Name that Colour
-//       </div>
-
-//       <div id="content">
-//         <div id="inputs">
-//           <Hex colour={colourInfo} colourCallback={setColourInfo} />
-//           <Rgb colour={colourInfo} colourCallback={setColourInfo} />
-//           <Name colour={colourInfo} colourCallback={setColourInfo} />
-//         </div>
-
-//         <div id="result">
-//           <span id="text">Result:</span>
-//           <Info colour={colourInfo} />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
