@@ -147,6 +147,8 @@ export function ConvertPixel(props: {}): ReactElement<any, any> {
   return (
     <div id="ConvertPixel_container">
       <div id="inputs">
+        <span>Paste an image into the canvas:</span>
+
         <canvas
           ref={canvasRef}
           style={{

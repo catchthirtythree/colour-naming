@@ -56,7 +56,7 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 728,
+        "height": 736,
         "resizable": true,
         "title": "Colour Naming",
         "width": 1024
