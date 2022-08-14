@@ -4,6 +4,8 @@ import './Hex.css';
 import { IColourInfo } from '../../types/colour-info';
 import { convertHexToColour } from '../../commands/colour';
 
+// @TODO(michael): Hex input works worse than ever. Needs fixing.
+
 export function cleanHex(str: string): string {
   // Replace any non-hex values from the string.
   let cleanedValue = str.replaceAll(/[^0-9a-fA-F]/g, '');
@@ -32,7 +34,7 @@ export function Hex(props: {
         <div id="input">
           <input
             style={{ color: props.colour.hex }}
-            pattern="^[#]([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+            pattern="^[#]([0-9a-fA-F]{1,6})$"
             value={inputValue}
             maxLength={7}
             onChange={(event) => {
