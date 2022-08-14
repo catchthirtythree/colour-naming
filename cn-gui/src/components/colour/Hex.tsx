@@ -1,10 +1,8 @@
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 
 import './Hex.css';
 import { IColourInfo } from '../../types/colour-info';
 import { convertHexToColour } from '../../commands/colour';
-
-// @TODO(michael): Hex input works worse than ever. Needs fixing.
 
 export function cleanHex(str: string): string {
   // Replace any non-hex values from the string.
@@ -19,10 +17,17 @@ export function Hex(props: {
   colour: IColourInfo,
   onSetColour: (colour: IColourInfo) => void,
 }): ReactElement<any, any> {
+  const changed = useRef<number>(0);
+
   const [inputValue, setInputValue] = useState<string>(props.colour.hex);
   const [lastValidInput, setLastValidInput] = useState<string>(props.colour.hex);
 
   useEffect(() => {
+    if (changed.current > 0) {
+      changed.current--;
+      return;
+    }
+
     setInputValue(props.colour.hex);
   }, [props]);
 
@@ -41,6 +46,7 @@ export function Hex(props: {
               const cleaned = cleanHex(event.target.value);
 
               setInputValue(cleaned);
+              changed.current++;
 
               convertHexToColour(cleaned).then((colour) => {
                 if (colour) {
@@ -50,7 +56,8 @@ export function Hex(props: {
               });
             }}
             onBlur={(event) => {
-              setInputValue(lastValidInput);
+              setInputValue(props.colour.hex);
+              changed.current = 0;
             }}
           />
           <span id="shadow">{inputValue}</span>
